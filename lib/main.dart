@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/presentation/login/login_view.dart';
+import 'package:cba_connect_application/presentation/login/login_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MyApp extends StatelessWidget {
@@ -22,5 +22,6 @@ class MyApp extends StatelessWidget {
 }
 
 void main() {
+  print("앱 시작");
   runApp(ProviderScope(child: MyApp()));
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/core/color.dart';
+import 'package:cba_connect_application/core/color.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'login_view_model.dart';
 
@@ -91,7 +91,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
                 const SizedBox(height: 16),
 
-                // 3) 비밀번호 입력
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: true,
@@ -124,7 +123,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
                 const SizedBox(height: 16),
 
-                // 4) 로그인 버튼
                 state.status == LoginStatus.loading
                     ? CircularProgressIndicator(color: secondarySub1Color)
                     : SizedBox(
@@ -153,7 +151,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
                 const SizedBox(height:8),
 
-                // 5) 로그인 유지 체크박스
                 Row(
                   children: [
                     Checkbox(
@@ -202,7 +199,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     ),
                   ],
                 ),
-                const Spacer(), // 하단 여백
+                const Spacer(),
               ],
             ),
           )
