@@ -22,7 +22,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
     ref.listen<LoginState>(loginViewModelProvider, (prev, next) {
       if (next.status == LoginStatus.success) {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/main');
       } else if (next.status == LoginStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message ?? '로그인 실패')),
