@@ -1,7 +1,7 @@
 import 'package:cba_connect_application/core/color.dart';
-import 'package:cba_connect_application/presentation/main/%08pages/home_view.dart';
-import 'package:cba_connect_application/presentation/main/%08pages/profile_view.dart';
-import 'package:cba_connect_application/presentation/main/%08pages/search_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/profile_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/search_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

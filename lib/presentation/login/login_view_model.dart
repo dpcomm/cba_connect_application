@@ -2,6 +2,7 @@ import 'package:cba_connect_application/core/secure_storage.dart';
 import 'package:cba_connect_application/datasources/auth_data_source.dart';
 import 'package:cba_connect_application/repositories/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cba_connect_application/core/socket/socket_manager.dart';
 
 // 로그인 상태값 enum(로그인 성공 여부를 따지기 위함으로, 필요할 경우에만 선언)
 enum LoginStatus { initial, loading, success, error }
@@ -31,6 +32,10 @@ class LoginViewModel extends StateNotifier<LoginState> {
 
       await SecureStorage.write(key: 'access-token', value: response.accessToken);
       if (autoLogin) await SecureStorage.write(key: 'refresh-token', value: response.refreshToken!);
+
+      final socketManager = SocketManager();
+      socketManager.setSocket(response.accessToken);
+      socketManager.connect();
 
       // 성공했으므로 로그인 전역변수를 성공으로 변경.
       state = LoginState(status: LoginStatus.success);
