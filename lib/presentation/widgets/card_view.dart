@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cba_connect_application/presentation/main/pages/';
-import 'package:recba_carpool/core/widgets/CarpoolActionButton.dart';
+import 'package:cba_connect_application/presentation/widgets/button_view.dart';
 
-class CarpoolDetailPage extends StatefulWidget {
+class CardView extends StatefulWidget {
   final String phone;
   final String car;
   final String carNumber;
   final String name;
   final bool isApplied;
 
-  const CarpoolDetailPage({
+  const CardView({
     Key? key,
     required this.phone,
     required this.car,
@@ -19,10 +18,10 @@ class CarpoolDetailPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CarpoolDetailPage> createState() => _CarpoolDetailPageState();
+  State<CardView> createState() => _CarpoolDetailPageState();
 }
 
-class _CarpoolDetailPageState extends State<CarpoolDetailPage> {
+class _CarpoolDetailPageState extends State<CardView> {
   late bool _isApplied;
 
   @override
@@ -60,7 +59,7 @@ class _CarpoolDetailPageState extends State<CarpoolDetailPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center, // ✅ 세로 가운데 정렬
+                    mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 프로필
@@ -111,7 +110,7 @@ class _CarpoolDetailPageState extends State<CarpoolDetailPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Expanded(
-                            child: CarpoolActionButton(
+                            child: ButtonView(
                               isApplied: _isApplied,
                               onPressed: _isApplied ? null : _applyCarpool,
                             ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CarpoolInfoCard extends StatelessWidget {
+class CardDetailView extends StatelessWidget {
   final String region;
   final String peopleInfo;
   final String car;
@@ -10,7 +10,7 @@ class CarpoolInfoCard extends StatelessWidget {
   final String time;
   final String location;
 
-  const CarpoolInfoCard({
+  const CardDetailView({
     super.key,
     required this.region,
     required this.peopleInfo,
