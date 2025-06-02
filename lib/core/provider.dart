@@ -17,7 +17,15 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository(handler: handler);
 });
 
-final chatViewModelProvider = StateNotifierProvider.family<ChatViewModel, List<(Chat, ChatStatus)>, int>((ref, roomId) {
-  final repository = ref.watch(chatRepositoryProvider);
-  return ChatViewModel(roomId: roomId, repository: repository);
-});
+final chatViewModelProvider =
+    StateNotifierProvider.family<ChatViewModel, List<Chat>, RoomSenderId>((
+      ref,
+      roomSender,
+    ) {
+      final repository = ref.watch(chatRepositoryProvider);
+      return ChatViewModel(
+        roomId: roomSender.roomId,
+        senderId: roomSender.senderId,
+        repository: repository,
+      );
+    });

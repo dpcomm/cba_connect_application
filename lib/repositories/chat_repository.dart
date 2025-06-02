@@ -12,9 +12,22 @@ class ChatRepository {
     _roomId = roomId;
   }
 
+  Future<List<Chat>?> fetchMessages(roomId) async {
+    final chat = Chat(
+      senderId: 1,
+      roomId: roomId,
+      message: "메세지",
+      timestamp: DateTime.now(),
+    );
+    final response = await _handler.requestUnreadMessage(chat, true);
+    if (response == null) return null;
+    _cache = [..._cache, ...response];
+    return response;
+  }
+
   Future<Chat?> sendChat(Chat chat) async {
     final response = await _handler.sendChat(chat);
-    if(response == null) return null;
+    if (response == null) return null;
     _cache.add(response);
     if (response.roomId != _roomId) return null; //기능 추가 가능
     return response;
@@ -29,8 +42,8 @@ class ChatRepository {
 
   Future<List<Chat>?> requestUnreadMessage(Chat chat, bool alreadyEnter) async {
     final response = await _handler.requestUnreadMessage(chat, alreadyEnter);
-    if(response == null) return null;
-    _cache = [ ..._cache, ...response];
+    if (response == null) return null;
+    _cache = [..._cache, ...response];
     return response;
   }
 
