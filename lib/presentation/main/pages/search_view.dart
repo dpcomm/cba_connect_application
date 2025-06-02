@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/presentation/chat/carpool_detail_popup.dart';
 import 'package:flutter/material.dart';
 
 class SearchView extends StatelessWidget {
@@ -5,16 +6,27 @@ class SearchView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      width: double.infinity,
-      height: double.infinity,
-      child: const Center(
-        child: Text(
-          '검색',
-          style: TextStyle(fontSize: 24, color: Colors.black),
-        ),
-      ),
+    // 임시 카풀 리스트
+    final dummyList = List.generate(5, (i) => i + 1);
+
+    return ListView.builder(
+      itemCount: dummyList.length,
+      itemBuilder: (context, index) {
+        final roomId = dummyList[index];
+        return ListTile(
+          title: Text('카풀 $roomId'),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder:
+                  (_) => Dialog(
+                    insetPadding: EdgeInsets.symmetric(horizontal: 32),
+                    child: CarpoolDetailPopup(roomId: roomId),
+                  ),
+            );
+          },
+        );
+      },
     );
   }
 }
