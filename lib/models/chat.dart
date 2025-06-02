@@ -19,4 +19,15 @@ class Chat {
             timestamp: DateTime.parse(json['timestamp'] as String),
         );
     }    
+
+    Map<String, dynamic> toJson(Chat chat) {
+      return {
+        'senderId': chat.senderId,
+        'roomId': chat.roomId,
+        'message': chat.message,
+        'timestamp': chat.timestamp.toIso8601String(),
+      };
+    }
 }
+
+enum ChatStatus { loading, success, failed, deleted }

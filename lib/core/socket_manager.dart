@@ -1,13 +1,11 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:cba_connect_application/config/app_config.dart';
-import 'package:cba_connect_application/core/socket/socket_event_handler.dart';
 
 class SocketManager {
   static final SocketManager _instance = SocketManager._internal();
   factory SocketManager() => _instance;
 
   late IO.Socket socket;
-  final SocketEventHandler socketEventHandler = SocketEventHandler();
 
   SocketManager._internal();
 
@@ -24,7 +22,6 @@ class SocketManager {
         },
       );
 
-      socketEventHandler.setSocket(socket);
       return;      
     } catch (err) {
       print(err);
@@ -34,8 +31,8 @@ class SocketManager {
 
   void connect() {
     try {
-      socketEventHandler.listenToConnect();
-      socketEventHandler.listenToConnectError();
+      socket.on('connect', (_) => print('✅ 연결됨'));
+      socket.on('connect_error', (err) => print('❌ 연결 에러: $err'));
       socket.connect();
       return;
     } catch (err) {
