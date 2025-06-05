@@ -28,14 +28,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
       return const Center(child: Text("로그인 정보 없음"));
     }
 
-    final roomSenderId = RoomSenderId(
-      roomId: widget.roomId,
-      senderId: currentUserId,
-    );
-
-    final chatMessages = ref.watch(chatViewModelProvider(roomSenderId));
+    final chatMessages = ref.watch(chatViewModelProvider(widget.roomId));
     final chatViewModel = ref.read(
-      chatViewModelProvider(roomSenderId).notifier,
+      chatViewModelProvider(widget.roomId).notifier,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -59,9 +54,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
               padding: const EdgeInsets.all(16),
               itemCount: chatMessages.length,
               itemBuilder: (context, index) {
-                final message = chatMessages[index];
-                final isMine = message.senderId == currentUserId;
-                return _buildMessageBubble(message, isMine);
+                final (chat, status) = chatMessages[index];
+                final isMine = chat.senderId == currentUserId;
+                return _buildMessageBubble(chat, status, isMine);
               },
             ),
           ),
@@ -71,7 +66,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
   }
 
-  Widget _buildMessageBubble(Chat message, bool isMine) {
+  Widget _buildMessageBubble(Chat message, ChatStatus status, bool isMine) {
     final timeText = _formatTime(message.timestamp);
 
     Widget timeWidget = Padding(
@@ -153,7 +148,14 @@ class _ChatViewState extends ConsumerState<ChatView> {
               onTap: () {
                 final text = _controller.text.trim();
                 if (text.isEmpty) return;
+                // final chat = Chat(
+                //   senderId: currentUserId,
+                //   roomId: widget.roomId,
+                //   message: text,
+                //   timestamp: DateTime.now(),
+                // );
                 chatViewModel.sendMessage(text);
+                // chatViewModel.sendChat(chat);
                 _controller.clear();
               },
               child: const Padding(
