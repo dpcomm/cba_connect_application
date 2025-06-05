@@ -3,25 +3,24 @@ import 'package:cba_connect_application/models/chat.dart';
 
 class ChatRepository {
   final ChatEventHandler _handler;
+  int? _senderId;
   int? _roomId;
   List<Chat> _cache = [];
 
   ChatRepository({required ChatEventHandler handler}) : _handler = handler;
 
+  void setSenderId(int senderId) {
+    _senderId = senderId;
+  }
+
   void setRoomId(int roomId) {
     _roomId = roomId;
   }
 
-  Future<List<Chat>?> fetchMessages(roomId) async {
-    final chat = Chat(
-      senderId: 1,
-      roomId: roomId,
-      message: "메세지",
-      timestamp: DateTime.now(),
-    );
-    final response = await _handler.requestUnreadMessage(chat, true);
+  Future<List<Chat>?> loadChats(Chat chat) async {
+    final response = await _handler.requestMessageLoading(chat);
     if (response == null) return null;
-    _cache = [..._cache, ...response];
+    _cache = [...response, ..._cache];
     return response;
   }
 
@@ -40,8 +39,14 @@ class ChatRepository {
     }
   }
 
-  Future<List<Chat>?> requestUnreadMessage(Chat chat, bool alreadyEnter) async {
-    final response = await _handler.requestUnreadMessage(chat, alreadyEnter);
+  Future<List<Chat>?> requestUnreadMessage(Chat? chat, bool requestAll) async {
+    chat ??= Chat(
+      senderId: _senderId!,
+      roomId: _roomId!,
+      message: "request unread messages",
+      timestamp: DateTime.now(),
+    );    
+    final response = await _handler.requestUnreadMessage(chat, requestAll);
     if (response == null) return null;
     _cache = [..._cache, ...response];
     return response;

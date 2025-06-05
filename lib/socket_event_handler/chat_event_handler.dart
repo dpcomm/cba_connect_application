@@ -31,7 +31,7 @@ class ChatEventHandler {
     });
   }
 
-  Future<List<Chat>?> requestUnreadMessage(Chat chat, bool alreadyEnter) async {
+  Future<List<Chat>?> requestUnreadMessage(Chat chat, bool requestAll) async {
     final completer = Completer<List<Chat>>();
     socket.emitWithAck(
       'request unread messages', 
@@ -39,10 +39,10 @@ class ChatEventHandler {
         'recentChat' : {
           'senderId': chat.senderId,
           'roomId': chat.roomId,
-          'message': "request unread messages", 
+          'message': chat.message, 
           'timestamp': chat.timestamp.toIso8601String(),
         },
-        'alreadyEnter': alreadyEnter,
+        'requestAll': requestAll,
       },
       ack: (response) {
         final rawList = response['chats'] as List<dynamic>;
@@ -56,6 +56,21 @@ class ChatEventHandler {
       }
     );
     return completer.future;
+  }
+
+  Future<List<Chat>?> requestMessageLoading(Chat chat) async {
+    final completer = Completer<List<Chat>>();
+    socket.emitWithAck('request message loading', chat, ack: (response) {
+      final rawList = response['chats'] as List<dynamic>;
+      final rawChats = rawList.map((e) => e as Map<String, dynamic>).toList();
+
+      List<Chat> chats = [];
+      for (Map<String, dynamic> rawChat in rawChats) {
+        chats.add(Chat.fromJson(rawChat));
+      }
+      completer.complete(chats);
+    });
+    return completer.future;  
   }
 
   void offChat() {
