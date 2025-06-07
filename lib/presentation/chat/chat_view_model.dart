@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/models/chat.dart';
+import 'package:cba_connect_application/models/chat_item.dart';
 import 'package:cba_connect_application/repositories/chat_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 
-class ChatViewModel extends StateNotifier<List<(Chat, ChatStatus)>> {
+class ChatViewModel extends StateNotifier<List<ChatItem>> {
   final int roomId;
   final ChatRepository _repository;
   final Ref ref;
@@ -48,45 +49,83 @@ class ChatViewModel extends StateNotifier<List<(Chat, ChatStatus)>> {
     try {
       final loginState = ref.watch(loginViewModelProvider);
       currentUserId = loginState.user?.id;
-
       print('[ChatViewModel][_init] currentUserId=$currentUserId');
 
-      // 로컬(Prefs)에 저장된 최근 50개 메세지 불러와서 state에 저장
+      // 1) 로컬(Prefs)에 저장된 최근 50개 메세지 불러와서 state에 저장
       final cached = await _loadMessagesFromPrefs();
       if (cached.isNotEmpty) {
         print('[ChatViewModel][_init] 캐시된 메시지 로드: ${cached.length}개');
         state = cached;
-        print('[ChatViewModel] [_init] 캐시된 메시지 로드 후 state: ${state.length}개');
+        print('[ChatViewModel][_init] 캐시된 메시지 로드 후 state: ${state.length}개');
       } else {
         print('[ChatViewModel][_init] 캐시된 메시지 없음');
       }
 
-      // recentChat
-      if (state.isNotEmpty) {
-        final recentChat = state.last.$1; // Chat
-        await requestUnreadMessage(recentChat, false);
-      } else {
-        // state 비어있는 경우(recentChat이 없는경우)
-        // while???
-        // await requestUnreadMessage(recentChat, false);
-      }
-
-      // await _loadInitialMessagesFromServer();
-      // 초기 메세지 불러오는 부분??
-      // final messages = await _repository.fetchMessages(roomId);
-      // receiveMessages(messages);  // 서버에서 수신한 메세지 목록 state에 설정
+      // 2) 서버에서 이전 메세지 및 안읽은 메세지 로드
+      await _loadMessagesFromServer();
     } catch (e) {
-      print('초기 메세지 불러오기 실패: $e');
-      // receiveMessages([]); // 실패 시 빈 상태 세팅
+      print('[ChatViewModel][_init] 초기 메세지 불러오기 실패: $e');
+    }
+  }
+
+  // 서버에서 이전 메시지 및 읽지 않은 메시지 로드 및 처리
+  Future<void> _loadMessagesFromServer() async {
+    // 1) 로컬저장 이전 메세지 불러오기
+    // state가 비어있지 않은 경우(로컬에 저장된 메세지 있는 경우)
+    if (state.isNotEmpty) {
+      final firstItem = state.first;
+      if (firstItem is ChatMessageItem) {
+        // 로컬 oldest 메세지
+        final stateOldestChat = firstItem.chat; // Chat
+        print('[ChatViewModel][_loadMessagesFromServer] 캐시된 가장 오래된(첫번째) 메세지: ${stateOldestChat.message}');
+
+        // 서버에서 stateOldestChat 이전 메세지들 로드
+        final previousMessages = await _repository.loadChats(stateOldestChat);
+        if (previousMessages != null && previousMessages.isNotEmpty) {
+          // 서버에서 받아온 이전 메세지들 -> ChatMessageItem으로 변환
+          final previousChatItems =
+              previousMessages
+                  .map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success),)
+                  .toList();
+
+          // 이전 메세지들을 state 앞에 추가
+          state = [...previousChatItems, ...state];
+          print('[ChatViewModel][_loadMessagesFromServer] 서버에서 이전 메시지 ${previousChatItems.length}개 로드 및 추가');
+        } else {
+          print('[ChatViewModel][_loadMessagesFromServer] 서버에서 이전 메시지 없음');
+        }
+      }
+    } else {
+       print('[ChatViewModel][_loadMessagesFromServer] state(로컬) 비어있음');
+    }
+
+    // 2) recentChat 이후 안읽은 메세지 불러오기
+    // state가 비어있지 않은 경우(로컬에 저장된 메세지 있는 경우)
+    print('[ChatViewModel][_loadMessagesFromServer] 안 읽은 메시지 요청 로직 시작');
+
+    if (state.isNotEmpty) {
+      final lastItem = state.last;
+
+      if (lastItem is ChatMessageItem) {
+        final recentChat = lastItem.chat;
+        print('[ChatViewModel][_loadMessagesFromServer] 서버에서 안읽은 메세지 요청 시도 : recentChat=${recentChat.message}');
+        await requestUnreadMessage(recentChat, false); // *** alreadyEnter bool 수정해야함!! ***
+      } else {
+        // state에 메시지가 있지만 ChatMessageItem이 아닌 경우 (ex: DividerItem 등)
+        print('[ChatViewModel][_loadMessagesFromServer] 마지막 항목이 ChatMessageItem이 아니므로 안 읽은 메시지 요청 스킵');
+        print('실제 타입: ${lastItem.runtimeType}');
+      }
+    } else {
+      // *** recentChat 없는 경우 안읽음 메세지 불러오기 추가해야함!! ***
+      print('[ChatViewModel][_loadMessagesFromServer] state(로컬) 비어있어서 안 읽은 메세지 요청 스킵 - 추가 로직 필요');
     }
   }
 
   void _onReceived(Chat chat) {
     print('[ChatViewModel][_onReceived 시작] state => ${state.length}개');
-    print(
-      '[ChatViewModel][_onReceived] 메시지 수신: ${chat.message} (senderId=${chat.senderId})',
-    );
-    state = [...state, (chat, ChatStatus.success)];
+    print('[ChatViewModel][_onReceived] 메시지 수신: ${chat.message} (senderId=${chat.senderId})');
+    // 수신된 Chat을 ChatMessageItem으로 변환하여 추가
+    state = [...state, ChatMessageItem(chat: chat, status: ChatStatus.success)];
     print('[ChatViewModel][_onReceived 끝] state => ${state.length}개');
   }
 
@@ -103,78 +142,75 @@ class ChatViewModel extends StateNotifier<List<(Chat, ChatStatus)>> {
       message: message,
       timestamp: DateTime.now(),
     );
-    print(
-      '[ChatViewModel][sendMessage] Chat 생성: ${chat.message}, ${chat.timestamp}',
-    );
+    print('[ChatViewModel][sendMessage] Chat 생성: ${chat.message}, ${chat.timestamp}');
 
     await sendChat(chat);
   }
 
-  // sendChat
+  // sendChat: Chat 객체를 받아 전송
   Future<void> sendChat(Chat chat) async {
     print('[ChatViewModel][sendChat] 메시지 전송 시도: ${chat.message}');
 
-    state = [...state, (chat, ChatStatus.loading)];
-    print(
-      '[ChatViewModel][sendChat] state 상태 업데이트(1) - 총 state 수: ${state.length}',
+    final sendingChatItem = ChatMessageItem(
+      chat: chat,
+      status: ChatStatus.loading,
     );
+    state = [...state, sendingChatItem];
+    print('[ChatViewModel][sendChat] state 상태 업데이트(1) - 총 state 수: ${state.length}');
 
     final sent = await _repository.sendChat(chat);
 
-    if (sent == null) {
-      // 전송 실패한 경우
-      print('[ChatViewModel][sendChat] 메시지 전송 실패: ${chat.message}');
-      state =
-          state.map((entry) {
-            final (tempChat, status) = entry;
-            if (status == ChatStatus.loading && tempChat == chat) {
-              return (chat, ChatStatus.failed);
+    state =
+        state.map((item) {
+          if (item is ChatMessageItem &&
+              item.status == ChatStatus.loading &&
+              item.chat == chat) {
+            if (sent == null) {
+              // 전송 실패한 경우
+              print('[ChatViewModel][sendChat] 메시지 전송 실패: ${chat.message}');
+              return ChatMessageItem(chat: chat, status: ChatStatus.failed);
+            } else {
+              // 전송 성공한 경우
+              print('[ChatViewModel][sendChat] 메시지 전송 성공: ${chat.message}');
+              return ChatMessageItem(chat: chat, status: ChatStatus.success);
             }
-            return entry;
-          }).toList();
-    } else {
-      // 전송 성공한 경우
-      print('[ChatViewModel][sendChat] 메시지 전송 성공: ${sent.message}');
-      print(
-        '[ChatViewModel][sendChat] state 상태 업데이트(2) - 총 state 수: ${state.length}',
-      );
-      state =
-          state.map((entry) {
-            final (tempChat, status) = entry;
-            if (status == ChatStatus.loading && tempChat == chat) {
-              return (sent, ChatStatus.success);
-            }
-            return entry;
-          }).toList();
-      print(
-        '[ChatViewModel][sendChat] state 상태 업데이트(3) - 총 state 수: ${state.length}',
-      );
-    }
+          }
+          return item;
+        }).toList();
+    print('[ChatViewModel][sendChat] state 상태 업데이트(3) - 총 state 수: ${state.length}');
   }
 
-  // 안읽은 메세지 불러오기
+  // 안읽은 메세지 불러오기 (recentChat 기준)
   Future<void> requestUnreadMessage(Chat chat, bool alreadyEnter) async {
     print('[ChatViewModel][requestUnreadMessage] 안 읽은 메시지 요청');
 
     final response = await _repository.requestUnreadMessage(chat, alreadyEnter);
-    if (response == null) {
-      print('[ChatViewModel][requestUnreadMessage] 응답 없음');
+    if (response == null || response.isEmpty) {
+      print('[ChatViewModel][requestUnreadMessage] 응답 없거나 비어있음');
       return;
     }
-    print(
-      '[ChatViewModel][requestUnreadMessage] 응답받은 response 메시지 수: ${response.length}개',
-    );
+    print('[ChatViewModel][requestUnreadMessage] 응답받은 response 메시지 수: ${response.length}개',);
 
-    List<(Chat, ChatStatus)> list =
-        response.map((chat) => (chat, ChatStatus.success)).toList();
-    state = [...state, ...list];
-    print(
-      '[ChatViewModel][requestUnreadMessage] state 상태 업데이트 - 총 state 수: ${state.length}',
-    );
+    // '여기까지 읽었습니다' 구분선 추가
+    final List<ChatItem> itemsToAdd = [];
+    // 로컬에 메세지 있었고, 서버에서 안읽은 메세지가 왔을 때만 구분선 추가
+    if (state.isNotEmpty) {
+      itemsToAdd.add(UnreadDividerItem(text: '---여기까지 읽었습니다---'));
+      print('[ChatViewModel][requestUnreadMessage] "--여기까지 읽었습니다--" 구분선 추가');
+    }
+
+    // 받아온 Chat 리스트를 ChatMessageItem 리스트로 변환하여 state에 추가
+    final unreadChatItems =
+        response.map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success))
+                .toList();
+    itemsToAdd.addAll(unreadChatItems); // 안 읽은 메시지들을 구분선 뒤에 추가
+    // 구분선 + 안 읽은 메세지들 state에 추가
+    state = [...state, ...itemsToAdd];
+    print('[ChatViewModel][requestUnreadMessage] state 상태 업데이트 - 총 state 수: ${state.length}');
   }
 
   // 로컬(Prefs)에 저장된 최근 50개 메세지 불러오기
-  Future<List<(Chat, ChatStatus)>> _loadMessagesFromPrefs() async {
+  Future<List<ChatItem>> _loadMessagesFromPrefs() async {
     print('[ChatViewModel][_loadMessagesFromPrefs] 로컬에서 메시지 불러오기 시작');
 
     final prefs = await SharedPreferences.getInstance();
@@ -185,23 +221,21 @@ class ChatViewModel extends StateNotifier<List<(Chat, ChatStatus)>> {
         return [];
       }
       final List decoded = jsonDecode(raw);
-      print(
-        '[ChatViewModel][_loadMessagesFromPrefs] ${decoded.length}개의 메시지 디코딩 완료',
-      );
+      print('[ChatViewModel][_loadMessagesFromPrefs] ${decoded.length}개의 메시지 디코딩 완료');
 
-      final loadedMessages = <(Chat, ChatStatus)>[];
+      final loadedChatItems = <ChatItem>[];
 
       // 일부 메시지 손상만 있어도 전체 캐시 삭제 없이 나머지를 살리기
       for (final e in decoded) {
         try {
           final chat = Chat.fromJson(e['chat']);
           final status = ChatStatus.values.byName(e['status']);
-          loadedMessages.add((chat, status));
+          loadedChatItems.add(ChatMessageItem(chat: chat, status: ChatStatus.success));
         } catch (e) {
           print('[ChatViewModel][_loadMessagesFromPrefs] 개별 메시지 파싱 오류: $e');
         }
       }
-      return (loadedMessages);
+      return loadedChatItems;
     } catch (e) {
       print('[ChatViewModel][_loadMessagesFromPrefs] 메시지 디코딩 중 오류 발생: $e');
       await prefs.remove('chat_cache_$roomId');
@@ -209,32 +243,9 @@ class ChatViewModel extends StateNotifier<List<(Chat, ChatStatus)>> {
     }
   }
 
-  // 초기 메세지 전부 불러오기 (추가해야 함)
-  Future<void> _loadInitialMessagesFromServer() async {
-    print('[ChatViewModel][_loadInitialMessagesFromServer] 서버로부터 초기 메시지 로딩');
-
-    // final loadedMessages = <(Chat, ChatStatus)>[];
-    // loadedMessages = await _repository.fetchMessages(roomId);
-
-    // 이전 코드
-    //   final messages = await _repository.fetchMessages(roomId);
-    //   if (messages == null) {
-    //     print('[ChatViewModel][_loadInitialMessagesFromServer] 메시지 없음');
-    //     return;
-    //   }
-
-    //   final chatList =
-    //       messages.map((chat) => (chat, ChatStatus.success)).toList();
-    //   state = [...state, ...chatList];
-
-    //   print(
-    //     '[ChatViewModel][_loadInitialMessagesFromServer] ${chatList.length}개 메시지 불러옴',
-    //   );
-  }
-
-  // 최근 메세지 Prefs에 저장하기
+  // 최근 메세지 50개 Prefs에 저장하기
   Future<void> _saveRecentMessagesToPrefs(
-    List<(Chat, ChatStatus)> messagesToSave,
+    List<ChatItem> chatItemsToSave,
   ) async {
     print('[ChatViewModel][_saveRecentMessagesToPrefs] 최근 메시지 저장 시작');
 
@@ -242,40 +253,34 @@ class ChatViewModel extends StateNotifier<List<(Chat, ChatStatus)>> {
 
     // 마지막 50개 메세지
     final lastChat50 =
-        messagesToSave.length <= 50
-            ? messagesToSave
-            : messagesToSave.sublist(messagesToSave.length - 50);
+        chatItemsToSave
+            .whereType<ChatMessageItem>() // ChatMessageItem만 필터링
+            .toList();
 
-    print('[ChatViewModel][_saveRecentMeesagesToPrefs] ${lastChat50.last}');
+    final messeagesToProcess =
+        lastChat50.length <= 50
+            ? lastChat50
+            : lastChat50.sublist(lastChat50.length - 50);
+
+    print('[ChatViewModel][_saveRecentMessagesToPrefs] 저장될 마지막 메세지: ${messeagesToProcess.isEmpty ? "없음" : messeagesToProcess.last.chat.message}');
 
     final jsonList =
-        lastChat50
-            .map(
-              (e) => {
-                'chat': e.$1.toJson(e.$1),
-                'status': e.$2.name, // Enum type
-              },
-            )
+        messeagesToProcess
+            .map((item) => {
+                'chat': item.chat.toJson(),
+                'status': item.status.name, // Enum type
+              },)
             .toList();
 
     final jsonString = jsonEncode(jsonList);
     await prefs.setString('chat_cache_$roomId', jsonString);
 
-    print(
-      '[ChatViewModel][_saveRecentMeesagesToPrefs] ${lastChat50.length}개의 메시지 저장 완료',
-    );
+    print('[ChatViewModel][_saveRecentMessagesToPrefs] ${messeagesToProcess.length}개의 메시지 저장 완료');
   }
-
-  // Future<void> closeViewModel() async {
-  //   await _saveRecentMessagesToPrefs();
-  //   dispose();
-  // }
 
   @override
   void dispose() {
-    print(
-      '[ChatViewModel][dispose] 뷰모델 dispose 메서드 호출됨 (저장 로직은 ref.onDispose에서 처리)',
-    );
+    print('[ChatViewModel][dispose] 뷰모델 dispose 메서드 호출됨 (저장 로직은 ref.onDispose에서 처리)');
     _repository.dispose();
     super.dispose();
   }

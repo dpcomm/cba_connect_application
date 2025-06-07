@@ -3,7 +3,7 @@ import 'package:cba_connect_application/repositories/chat_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/socket_event_handler/chat_event_handler.dart';
-import 'package:cba_connect_application/models/chat.dart';
+import 'package:cba_connect_application/models/chat_item.dart';
 
 final socketManagerProvider = Provider((ref) => SocketManager());
 
@@ -18,7 +18,7 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 });
 
 final chatViewModelProvider = StateNotifierProvider.family
-    .autoDispose<ChatViewModel, List<(Chat, ChatStatus)>, int>((ref, roomId) {
+    .autoDispose<ChatViewModel, List<ChatItem>, int>((ref, roomId) {
       final repository = ref.watch(chatRepositoryProvider);
       return ChatViewModel(roomId: roomId, repository: repository, ref: ref);
     });
