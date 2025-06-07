@@ -20,12 +20,12 @@ class Chat {
         );
     }    
 
-    Map<String, dynamic> toJson(Chat chat) {
+    Map<String, dynamic> toJson() {
       return {
-        'senderId': chat.senderId,
-        'roomId': chat.roomId,
-        'message': chat.message,
-        'timestamp': chat.timestamp.toIso8601String(),
+        'senderId': senderId,
+        'roomId': roomId,
+        'message': message,
+        'timestamp': timestamp.toIso8601String(),
       };
     }
 }

@@ -18,7 +18,7 @@ class ChatEventHandler {
 
   Future<Chat?> sendChat(Chat chat) async {
     final completer = Completer<Chat>();
-    socket.emitWithAck('chat', chat.toJson(chat), ack: (response) {
+    socket.emitWithAck('chat', chat.toJson(), ack: (response) {
       completer.complete(Chat.fromJson(response['chat']));
     });
     return completer.future;
