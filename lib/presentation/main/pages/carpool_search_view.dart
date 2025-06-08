@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:cba_connect_application/presentation/widgets/card_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/card_detail_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/destination_selection_view.dart';
 
 class CarpoolSearchView extends StatefulWidget {
   const CarpoolSearchView({super.key});
@@ -96,7 +97,14 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DestinationSelectionView(),
+                  ),
+                );
+              },
               style: TextButton.styleFrom(
                 side: const BorderSide(color: Colors.black87),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -106,6 +114,7 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
             ),
           ),
         ],
+
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Column(

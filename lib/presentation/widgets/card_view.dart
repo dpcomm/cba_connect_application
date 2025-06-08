@@ -73,7 +73,7 @@ class _CarpoolDetailPageState extends State<CardView> {
         iconTheme: const IconThemeData(color: Colors.black),
         title: Text('${widget.name}님의 카풀 정보',
             style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
         leading: const BackButton(),
       ),
       body: LayoutBuilder(

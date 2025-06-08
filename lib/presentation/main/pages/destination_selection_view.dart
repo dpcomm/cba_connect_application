@@ -83,7 +83,7 @@ class _DestinationSelectionViewState extends State<DestinationSelectionView> {
         leading: const BackButton(),
         title: const Text(
           '카풀 등록',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
         ),
       ),
       body: Column(

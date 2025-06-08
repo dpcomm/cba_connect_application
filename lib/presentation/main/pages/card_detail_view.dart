@@ -54,7 +54,6 @@ class CardDetailView extends StatelessWidget {
                 Text('👥 $currentPeople/$totalPeople', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 8),
                 Text('🚘 $car($carColor)', style: TextStyle(fontSize: 14)),
-
                 if (isFull) ...[
                   const SizedBox(width: 6),
                   CloseBadge(),
