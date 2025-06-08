@@ -15,43 +15,49 @@ class CarpoolSearchView extends StatefulWidget {
 class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, String>> filteredChatData = [];
+  List<Map<String, dynamic>> filteredChatData = [];
 
   final List<String> tabLabels = ['수련회장으로', '집으로'];
 
-  final List<Map<String, String>> chatData = [
+  final List<Map<String, dynamic>> chatData = [
     {
+      'name': '박예림',
       'region': '부평',
-      'peopleInfo': '1/4',
+      'currentPeople': 1,
+      'maxPeople': 4,
       'car': '부가티',
       'carColor': '보라색',
       'carNumber': '97가1128',
-      'name': '박예림',
       'time': '저녁 8시',
       'location': '신도림역 2번 출구 앞',
       'phone': '010-5508-1689',
+      'message':'늦지 않았으면 좋겠어요',
     },
     {
+      'name': '최슬기',
       'region': '강동구',
-      'peopleInfo': '1/3',
+      'currentPeople': 2,
+      'maxPeople': 3,
       'car': '셀토스',
       'carColor': '하얀색',
       'carNumber': '23가2817',
-      'name': '최슬기',
       'time': '저녁 10시',
       'location': '강동역 2번 출구 앞',
       'phone': '010-5564-6658',
+      'message':'주정차시 벌금 내주세요',
     },
     {
+      'name': '전형진',
       'region': '강서구',
-      'peopleInfo': '2/3',
+      'currentPeople': 4,
+      'maxPeople': 4,
       'car': '미니쿠퍼',
       'carColor': '초록색',
       'carNumber': '81너3428',
-      'name': '전형진',
       'time': '저녁 7시',
       'location': '신도림역 테크노마트 앞',
       'phone': '010-5564-6658',
+      'message':'커피는 사랑입니다',
     },
   ];
 
@@ -224,27 +230,38 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
             itemCount: filteredChatData.length,
             itemBuilder: (context, index) {
               final item = filteredChatData[index];
+              // final current = item['currentPeople'] ?? 0;
+              // final max = item['maxPeople'] ?? 0;
+
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CardView(
-                        phone: item['phone'] ?? '',
-                        car: item['car'] ?? '',
-                        carNumber: item['carNumber'] ?? '',
                         name: item['name'] ?? '',
-                      ),
+                        region: item['region'] ?? '',
+                        phone: item['phone'] ?? '',
+                        totalPeople: item['maxPeople'] ?? 0,
+                        currentPeople: item['currentPeople'] ?? 0,
+                        car: item['car'] ?? '',
+                        carColor: item['carColor'] ?? '',
+                        carNumber: item['carNumber'] ?? '',
+                        time: item['time'] ?? '',
+                        location: item['location'] ?? '',
+                        message: item['message'] ?? '',
+                      )
                     ),
                   );
                 },
                 child: CardDetailView(
+                  name: item['name'] ?? '',
                   region: item['region'] ?? '',
-                  peopleInfo: item['peopleInfo'] ?? '',
+                  totalPeople: item['maxPeople'] ?? 0,
+                  currentPeople: item['currentPeople'] ?? 0,
                   car: item['car'] ?? '',
                   carColor: item['carColor'] ?? '',
                   carNumber: item['carNumber'] ?? '',
-                  name: item['name'] ?? '',
                   time: item['time'] ?? '',
                   location: item['location'] ?? '',
                 ),

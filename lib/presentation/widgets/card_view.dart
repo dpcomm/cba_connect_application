@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:cba_connect_application/presentation/widgets/button_view.dart';
+import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
+
 
 class CardView extends StatefulWidget {
+  final String name;
+  final String region;
+  final String carColor;
+  final String time;
+  final String location;
   final String phone;
+  final int totalPeople;
+  final int currentPeople;
   final String car;
   final String carNumber;
-  final String name;
+  final String message;
   final bool isApplied;
 
   const CardView({
     Key? key,
+    required this.name,
+    required this.region,
+    required this.carColor,
+    required this.time,
+    required this.location,
     required this.phone,
+    required this.totalPeople,
+    required this.currentPeople,
     required this.car,
     required this.carNumber,
-    required this.name,
+    required this.message,
     this.isApplied = false,
   }) : super(key: key);
 
@@ -28,6 +44,16 @@ class _CarpoolDetailPageState extends State<CardView> {
   void initState() {
     super.initState();
     _isApplied = widget.isApplied;
+  }
+
+  @override
+  void didUpdateWidget(covariant CardView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isApplied != widget.isApplied) {
+      setState(() {
+        _isApplied = widget.isApplied;
+      });
+    }
   }
 
   void _applyCarpool() {
@@ -70,9 +96,17 @@ class _CarpoolDetailPageState extends State<CardView> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${widget.name}',
-                                  style: const TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.bold)),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${widget.name}',
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  if (widget.currentPeople >= widget.totalPeople)
+                                    CloseBadge(),
+                                ],
+                              ),
                               Text('${widget.phone} | ${widget.car} | ${widget.carNumber}',
                                   style: const TextStyle(color: Colors.grey)),
                             ],
@@ -91,18 +125,32 @@ class _CarpoolDetailPageState extends State<CardView> {
                         child: const Text("지도 마커 생성 & 카풀 픽업 위치 표시"),
                       ),
 
-                      const SizedBox(height: 16),
-
-                      _buildInfoRow(Icons.calendar_today, '6월 17일 18시 출발'),
-                      const SizedBox(height: 8),
-                      const Divider(),
-                      _buildInfoRow(Icons.people, '2 / 3 | 🧑‍🤝‍🧑 동승자 : 유정인 박현빈'),
-                      const SizedBox(height: 8),
-                      const Divider(),
-                      _buildInfoRow(Icons.location_pin, '위치정보\n서울특별시 강남구 테헤란로 311'),
-                      const SizedBox(height: 8),
-                      const Divider(),
-                      _buildInfoRow(Icons.bolt, '늦지 않았으면 좋겠어요.\n주정차 시 벌금 내주세요.'),
+                      const SizedBox(height: 24),
+                      // _buildInfoRow(Icons.calendar_today, '${widget.time}'),
+                      // const SizedBox(height: 8),
+                      // const Divider(),
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 6),
+                            _buildInfoRow(Icons.location_pin, '시간: ${widget.time} \n장소: ${widget.location}'),
+                            const SizedBox(height: 6),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            _buildInfoRow(Icons.bolt, '요청사항: ${widget.message}'),
+                            const SizedBox(height: 8),
+                            const Divider(),
+                            const SizedBox(height: 6),
+                            _buildInfoRow(
+                              Icons.people,
+                              '모집인원: ${widget.currentPeople} / ${widget.totalPeople} ',
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 24),
 
                       // 하단 버튼
@@ -112,7 +160,7 @@ class _CarpoolDetailPageState extends State<CardView> {
                           Expanded(
                             child: ButtonView(
                               isApplied: _isApplied,
-                              onPressed: _isApplied ? null : _applyCarpool,
+                              onPressed: (_isApplied || widget.currentPeople >= widget.totalPeople) ? null : _applyCarpool,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -148,9 +196,10 @@ class _CarpoolDetailPageState extends State<CardView> {
       ),
     );
   }
+
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         CircleAvatar(
           radius: 18,

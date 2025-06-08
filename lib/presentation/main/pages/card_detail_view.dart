@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
 
 class CardDetailView extends StatelessWidget {
   final String region;
-  final String peopleInfo;
+  final int totalPeople;
+  final int currentPeople;
   final String car;
   final String carColor;
   final String carNumber;
@@ -13,7 +15,8 @@ class CardDetailView extends StatelessWidget {
   const CardDetailView({
     super.key,
     required this.region,
-    required this.peopleInfo,
+    required this.totalPeople,
+    required this.currentPeople,
     required this.car,
     required this.carColor,
     required this.carNumber,
@@ -24,6 +27,7 @@ class CardDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isFull = currentPeople >= totalPeople;
     return Card(
       color: Colors.white,
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -47,9 +51,14 @@ class CardDetailView extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(width: 8),
-                Text('👥 $peopleInfo', style: TextStyle(fontSize: 14)),
+                Text('👥 $currentPeople/$totalPeople', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 8),
                 Text('🚘 $car($carColor)', style: TextStyle(fontSize: 14)),
+
+                if (isFull) ...[
+                  const SizedBox(width: 6),
+                  CloseBadge(),
+                ],
               ],
             ),
             const SizedBox(height: 12),

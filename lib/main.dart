@@ -16,8 +16,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         // '/': (_) => MainView(),
-        // '/': (_) => CarpoolSearchView(),
-        '/': (_) => DestinationSelectionView(),
+        '/': (_) => CarpoolSearchView(),
+        // '/': (_) => DestinationSelectionView(),
         '/main': (_) => MainView(),
       },
     );
