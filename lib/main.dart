@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 // import 'package:cba_connect_application/presentation/login/login_view.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cba_connect_application/presentation/main/pages/carpool_search_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/carpool_search_view.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

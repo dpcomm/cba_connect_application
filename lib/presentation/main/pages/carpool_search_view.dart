@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:cba_connect_application/presentation/widgets/card_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/card_detail_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/destination_selection_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/card_detail_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/destination_selection_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/loading_spinner_view.dart';
 
 class CarpoolSearchView extends StatefulWidget {
   const CarpoolSearchView({super.key});
@@ -17,6 +18,7 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> filteredChatData = [];
+
 
   final List<String> tabLabels = ['수련회장으로', '집으로'];
 
@@ -80,14 +82,17 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+
         backgroundColor: Colors.white,
         elevation: 0,
         titleSpacing: 16,
         title: const Row(
           children: [
+
             Icon(Icons.search, color: Colors.black),
             SizedBox(width: 8),
             Text('카풀 찾아보기', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
@@ -110,6 +115,7 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
+
               child: const Text('+ 카풀 등록', style: TextStyle(color: Colors.black)),
             ),
           ),
@@ -132,9 +138,17 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
           ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: List.generate(tabLabels.length, (index) => _buildTabContent(tabLabels[index])),
+      body: Stack(
+        children: [
+          TabBarView(
+            controller: _tabController,
+            children: List.generate(
+              tabLabels.length,
+                  (index) => _buildTabContent(tabLabels[index]),
+            ),
+          ),
+
+        ],
       ),
     );
   }
