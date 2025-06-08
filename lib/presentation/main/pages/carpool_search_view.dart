@@ -151,6 +151,9 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
                   ),
                   child: TextField(
                     controller: _searchController,
+                    onChanged: (value) {
+                      _performSearch();
+                    },
                     style: TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       hintText: '지역 검색(강남, 마포, 신도림)',
