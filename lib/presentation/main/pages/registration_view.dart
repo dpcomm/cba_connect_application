@@ -63,7 +63,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -74,22 +74,22 @@ class _RegistrationViewState extends State<RegistrationView> {
                             if (_capacity > 1) setState(() => _capacity--);
                           },
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            bottomLeft: Radius.circular(8),
+                            topLeft: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
                           ),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.grey.shade400,
                               border: Border.all(color: Colors.grey.shade400),
                               borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(8),
-                                bottomLeft: Radius.circular(8),
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
                               ),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             child: const Icon(
                               Icons.remove,
-                              color: Colors.black54,
+                              color: Colors.white,
                               size: 24,
                             ),
                           ),
@@ -107,22 +107,22 @@ class _RegistrationViewState extends State<RegistrationView> {
                             setState(() => _capacity++);
                           },
                           borderRadius: const BorderRadius.only(
-                            topRight: Radius.circular(8),
-                            bottomRight: Radius.circular(8),
+                            topRight: Radius.circular(16),
+                            bottomRight: Radius.circular(16),
                           ),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.grey.shade400,
                               border: Border.all(color: Colors.grey.shade400),
                               borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(8),
-                                bottomRight: Radius.circular(8),
+                                topRight: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
                               ),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             child: const Icon(
                               Icons.add,
-                              color: Colors.black54,
+                              color: Colors.white,
                               size: 24,
                             ),
                           ),
@@ -154,7 +154,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   const SizedBox(height: 6),
-                  _buildInputField(hint: '시간 엄수, 커피 사주시면 감사, 도착하면 전화주세요 등'),
+                  _buildInputField(hint: '시간 엄수, 도착하면 전화주세요 등'),
                   const SizedBox(height: 30),
 
                   Container(
@@ -193,15 +193,24 @@ class _RegistrationViewState extends State<RegistrationView> {
                     child: ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
+                          final message = '[${widget.destination}으로] 카풀 등록이 완료되었습니다.';
+
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('카풀 등록 완료')),
+                            SnackBar(
+                              backgroundColor: const Color(0xFF7F19FB),
+                              padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+                              content: Text(
+                                message,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
                           );
                         }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF7F19FB),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(32)),
                         textStyle: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
