@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:cba_connect_application/presentation/widgets/card_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/card_detail_view.dart';
 
-
 class CarpoolSearchView extends StatefulWidget {
   const CarpoolSearchView({super.key});
 
@@ -12,8 +11,11 @@ class CarpoolSearchView extends StatefulWidget {
   State<CarpoolSearchView> createState() => _CarpoolChatPageState();
 }
 
+
 class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, String>> filteredChatData = [];
 
   final List<String> tabLabels = ['수련회장으로', '집으로'];
 
@@ -57,6 +59,16 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    filteredChatData = List.from(chatData);
+  }
+
+  void _performSearch() {
+    String keyword = _searchController.text.toLowerCase();
+    setState(() {
+      filteredChatData = chatData
+          .where((item) => item['region']!.toLowerCase().contains(keyword))
+          .toList();
+    });
   }
 
   @override
@@ -138,16 +150,17 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
-                    style: TextStyle(color: Colors.black), // 글자색 흰색으로 변경
+                    controller: _searchController,
+                    style: TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       hintText: '지역 검색(강남, 마포, 신도림)',
-                      hintStyle: TextStyle(color: Colors.black38), // 힌트 글자 연하게
+                      hintStyle: TextStyle(color: Colors.black38),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.transparent, // 컨테이너가 배경이므로 투명 처리
+                      fillColor: Colors.transparent,
                       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                   ),
@@ -164,7 +177,7 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
                   icon: Icon(Icons.search, color: Colors.white),
                   onPressed: () {
                     // 여기에 검색 실행 로직 넣기
-                    print('검색 버튼 클릭됨!');
+                    _performSearch();
                   },
                 ),
               ),
@@ -188,7 +201,7 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
                 style: TextStyle(fontWeight: FontWeight.normal),
                 children: [
                   TextSpan(
-                    text: '[${chatData.length}]개',
+                    text: '[${filteredChatData.length}]개',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
@@ -205,9 +218,9 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            itemCount: chatData.length,
+            itemCount: filteredChatData.length,
             itemBuilder: (context, index) {
-              final item = chatData[index];
+              final item = filteredChatData[index];
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -240,3 +253,4 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
     );
   }
 }
+
