@@ -1,10 +1,10 @@
+import 'package:cba_connect_application/presentation/main/pages/home/destination_selection_view.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:cba_connect_application/presentation/widgets/card_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/card_detail_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/destination_selection_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/loading_spinner_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/card_detail_view.dart';
+import 'package:cba_connect_application/presentation/widgets/loading_spinner_view.dart';
 
 class CarpoolSearchView extends StatefulWidget {
   const CarpoolSearchView({super.key});

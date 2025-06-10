@@ -1,5 +1,5 @@
+import 'package:cba_connect_application/presentation/main/pages/home/registration_view.dart';
 import 'package:flutter/material.dart';
-import 'registration_view.dart';
 
 class DestinationSelectionView extends StatefulWidget {
   const DestinationSelectionView({super.key});
