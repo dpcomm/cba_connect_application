@@ -13,7 +13,6 @@ class CarpoolSearchView extends StatefulWidget {
   State<CarpoolSearchView> createState() => _CarpoolChatPageState();
 }
 
-
 class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
