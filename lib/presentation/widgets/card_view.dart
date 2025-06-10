@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cba_connect_application/presentation/widgets/button_view.dart';
 import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
+import 'package:kakao_map_native/kakao_map_native_view.dart';
 
 
 class CardView extends StatefulWidget {
@@ -38,6 +39,7 @@ class CardView extends StatefulWidget {
 }
 
 class _CarpoolDetailPageState extends State<CardView> {
+  final GlobalKey<KakaoMapNativeViewState> _mapKey1 = GlobalKey();
   late bool _isApplied;
 
   @override
@@ -118,11 +120,27 @@ class _CarpoolDetailPageState extends State<CardView> {
 
                       // 지도
                       Container(
-                        height: 150,
                         width: double.infinity,
+                        height: 300,
                         color: Colors.grey[300],
                         alignment: Alignment.center,
-                        child: const Text("지도 마커 생성 & 카풀 픽업 위치 표시"),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final w = constraints.maxWidth;   // 부모가 실제 계산한 폭
+                            final h = constraints.maxHeight;  // 부모가 실제 계산한 높이 (여기선 300)
+
+                            return KakaoMapNativeView(
+                              key: _mapKey1,
+                              width: w,
+                              height: h,
+                              latitude: 37.5327,
+                              longitude: 126.7330,
+                              zoomLevel: 15,
+                              mapType: "map",
+                              overlay: "hill_shading",
+                            );
+                          },
+                        )
                       ),
 
                       const SizedBox(height: 24),

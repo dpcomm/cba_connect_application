@@ -39,11 +39,12 @@ class LoginViewModel extends StateNotifier<LoginState> {
         key: 'access-token',
         value: response.accessToken,
       );
-      if (autoLogin)
+      if (autoLogin) {
         await SecureStorage.write(
           key: 'refresh-token',
           value: response.refreshToken!,
         );
+      }
 
       final socketManager = SocketManager();
       socketManager.setSocket(response.accessToken);
@@ -54,6 +55,33 @@ class LoginViewModel extends StateNotifier<LoginState> {
     } catch (error) {
       // 실패 결과를 로그인 전역변수에 저장
       state = LoginState(status: LoginStatus.error, message: error.toString());
+    }
+  }
+
+  Future<void> refreshLogin() async {
+    final accessToken = await SecureStorage.read(key: 'access-token');
+    final refreshToken = await SecureStorage.read(key: 'refresh-token');
+
+    if (accessToken == null || refreshToken == null) return;
+
+    /* 이 곳에 로딩 스피너 출력해야함. */
+    state = LoginState(status: LoginStatus.loading);
+    try {
+      final response = await _repository.refreshLogin(
+        accessToken: accessToken,
+        refreshToken: refreshToken
+      );
+
+      await SecureStorage.write(
+        key: 'access-token',
+        value: response.accessToken,
+      );
+
+      /* 이 곳에 로딩 스피너 해제. */
+      state = LoginState(status: LoginStatus.success, user: response.user);
+    } catch (e) {
+      /* 이 곳에 로딩 스피너 해제. */
+      state = LoginState(status: LoginStatus.error, message: e.toString());
     }
   }
 }

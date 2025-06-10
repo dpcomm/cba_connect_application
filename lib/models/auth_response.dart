@@ -21,4 +21,8 @@ class AuthResponse {
       user: User.fromJson(json['user'] as Map<String, dynamic>),
     );
   }
+  @override
+  String toString() {
+    return 'AuthResponse(message: $message, accessToken: $accessToken, refreshToken: $refreshToken, user: ${user.name})';
+  }
 }

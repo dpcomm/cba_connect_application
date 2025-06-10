@@ -1,4 +1,5 @@
 import 'package:cba_connect_application/core/custom_exception.dart';
+import 'package:cba_connect_application/models/user.dart';
 import 'package:dio/dio.dart';
 
 import '../models/auth_response.dart';
@@ -10,6 +11,10 @@ abstract class AuthDataSource {
     required String userId,
     required String password,
     required bool autoLogin,
+  });
+  Future<AuthResponse> refreshAccessToken({
+    required String accessToken,
+    required String refreshToken
   });
 }
 
@@ -43,6 +48,31 @@ class AuthDataSourceImpl implements AuthDataSource {
         final msg = data['message'] as String? ?? e.message;
         throw UnknownException(msg!);
       }
+      throw NetworkException();
+    }
+  }
+
+  @override
+  Future<AuthResponse> refreshAccessToken({
+    required String accessToken,
+    required String refreshToken
+  }) async {
+    try {
+      final response = await Network.dio.post(
+        '/api/user/refresh',
+        data: {
+          'accessToken': accessToken,
+          'refreshToken': refreshToken,
+        }
+      );
+      final data = response.data as Map<String, dynamic>;
+      return AuthResponse(
+          message: data['message'],
+          accessToken: data['accessToken'],
+          refreshToken: null,
+          user: User.empty()
+      );
+    } on DioException catch (e) {
       throw NetworkException();
     }
   }

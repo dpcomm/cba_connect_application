@@ -39,4 +39,14 @@ class AuthRepository {
       return Future.error(e.toString());
     }
   }
+
+  Future<AuthResponse> refreshLogin({
+    required String accessToken,
+    required String refreshToken
+  }) {
+    return _dataSource.refreshAccessToken(
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    );
+  }
 }

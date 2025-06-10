@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login_view_model.dart';
 
 class LoginView extends ConsumerStatefulWidget {
@@ -15,6 +16,16 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final _idCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _autoLogin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 빌드가 끝난 뒤 한 프레임 뒤에 실행
+    Future.microtask(() {
+      ref.read(loginViewModelProvider.notifier).refreshLogin();
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -174,10 +185,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        // 웹사이트 연결
+                        launchUrl(Uri.parse("https://recba.me/reset-password"));
                       },
                       child: Text(
-                        '아이디/비밀번호 찾기',
+                        '비밀번호 재설정',
                         style: TextStyle(
                           color: text700Color,
                           fontSize: 16,
@@ -187,7 +198,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     const SizedBox(height: 6),
                     GestureDetector(
                       onTap: () {
-                        // 웹사이트 연결
+                        launchUrl(Uri.parse("https://recba.me/register"));
                       },
                       child: Text(
                         '회원가입',

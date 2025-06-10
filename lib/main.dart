@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/presentation/login/login_view.dart';
 import 'package:cba_connect_application/presentation/main/main_view.dart';
 import 'package:flutter/material.dart';
 // import 'package:cba_connect_application/presentation/login/login_view.dart';
@@ -14,8 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'CBA Connect 카풀',
       initialRoute: '/',
       routes: {
-        // '/': (_) => MainView(),
-        '/': (_) => CarpoolSearchView(),
+        '/': (_) => LoginView(),
         '/main': (_) => MainView(),
       },
     );

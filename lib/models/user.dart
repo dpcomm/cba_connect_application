@@ -37,4 +37,18 @@ class User {
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
+  factory User.empty() {
+    return User(
+      id: 0,
+      rank: '',
+      userId: '',
+      name: '',
+      group: '',
+      phone: '',
+      birth: DateTime.fromMillisecondsSinceEpoch(0),
+      gender: '',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+    );
+  }
 }

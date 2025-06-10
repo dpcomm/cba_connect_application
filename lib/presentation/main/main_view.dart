@@ -1,4 +1,5 @@
 import 'package:cba_connect_application/core/color.dart';
+import 'package:cba_connect_application/presentation/main/pages/carpool_search_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/home_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/profile_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/search_view.dart';
@@ -14,7 +15,7 @@ class MainView extends ConsumerStatefulWidget {
 
 class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<Widget> _views = [HomeView(), SearchView(), ProfileView()];
+  final List<Widget> _views = [CarpoolSearchView(), SearchView(), ProfileView()];
 
   @override
   void initState() {
@@ -52,11 +53,11 @@ class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderSt
               ),
               Tab(
                 icon: Icon(idx == 1 ? Icons.search : Icons.search_outlined),
-                text: '검색',
+                text: '마이카풀',
               ),
               Tab(
                 icon: Icon(idx == 2 ? Icons.person : Icons.person_outline),
-                text: '내 정보',
+                text: '설정',
               ),
             ],
           ),
