@@ -12,6 +12,7 @@ class MainView extends ConsumerStatefulWidget {
 
 class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  /** 임의로 테스트하려고 주석처리 해놨습니다!*/
   // final List<Widget> _views = [CarpoolSearchView(), SearchView(), ProfileView()];
   final List<Widget> _views = [CarpoolSearchView()];
 

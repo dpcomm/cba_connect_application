@@ -29,3 +29,9 @@ class UnknownException implements CustomException {
   final String message;
   UnknownException([this.message = 'Unknown error occurred.']);
 }
+
+class UnauthorizedApiKeyException implements CustomException {
+  @override
+  final String message;
+  UnauthorizedApiKeyException([this.message = 'Unauthorized Api Key']);
+}

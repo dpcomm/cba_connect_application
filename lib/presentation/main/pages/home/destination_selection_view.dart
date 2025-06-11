@@ -108,13 +108,13 @@ class _DestinationSelectionViewState extends State<DestinationSelectionView> {
           buildDestinationCard(
             label: "수련회장으로",
             icon: Icons.favorite,
-            destination: "수련회장",
+            destination: "retreat",
             iconColor: Colors.pink,
           ),
           buildDestinationCard(
             label: "집으로",
             icon: Icons.home,
-            destination: "집",
+            destination: "home",
             iconColor: Colors.orange,
           )
 
