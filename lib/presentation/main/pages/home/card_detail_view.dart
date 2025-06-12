@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:characters/characters.dart';
 import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
 
 class CardDetailView extends StatelessWidget {
   final String region;
   final int totalPeople;
   final int currentPeople;
-  final String car;
-  final String carColor;
-  final String carNumber;
+  final String carInfo;
   final String name;
   final String time;
   final String location;
@@ -17,13 +16,17 @@ class CardDetailView extends StatelessWidget {
     required this.region,
     required this.totalPeople,
     required this.currentPeople,
-    required this.car,
-    required this.carColor,
-    required this.carNumber,
+    required this.carInfo,
     required this.name,
     required this.time,
     required this.location,
   });
+
+  String _truncateCharacters(String s, int maxChars) {
+    final chars = s.characters;
+    if (chars.length <= maxChars) return s;
+    return chars.take(maxChars).toString() + '…';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +50,16 @@ class CardDetailView extends StatelessWidget {
                 const Text('📍', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 4),
                 Text(
-                  region,
+                  _truncateCharacters(region, 10),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(width: 8),
                 Text('👥 $currentPeople/$totalPeople', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 8),
-                Text('🚘 $car($carColor)', style: TextStyle(fontSize: 14)),
+                Text(
+                    "🚘${_truncateCharacters(carInfo, 5)}",
+                    style: TextStyle(fontSize: 14)
+                ),
                 if (isFull) ...[
                   const SizedBox(width: 6),
                   CloseBadge(),
@@ -85,9 +91,8 @@ class CardDetailView extends StatelessWidget {
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
-                    location,
+                    _truncateCharacters(location, 10),
                     style: const TextStyle(fontSize: 13, color: Colors.black87),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

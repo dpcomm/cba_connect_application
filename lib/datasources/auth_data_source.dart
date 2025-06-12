@@ -65,12 +65,8 @@ class AuthDataSourceImpl implements AuthDataSource {
           'refreshToken': refreshToken,
         }
       );
-      final data = response.data as Map<String, dynamic>;
-      return AuthResponse(
-          message: data['message'],
-          accessToken: data['accessToken'],
-          refreshToken: null,
-          user: User.empty()
+      return AuthResponse.fromJson(
+        response.data as Map<String, dynamic>,
       );
     } on DioException catch (e) {
       throw NetworkException();

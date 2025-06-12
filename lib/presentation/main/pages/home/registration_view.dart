@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
@@ -39,6 +40,7 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
 
   @override
   Widget build(BuildContext context) {
+    final loginState = ref.watch(loginViewModelProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -271,7 +273,7 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                           }
 
                           final dto = CreateCarpoolDto(
-                            driverId: 1,
+                            driverId: loginState.user!.id,
                             carInfo: _carInfoCtrl.text,
                             origin: origin,
                             originDetailed: detailedOrigin,

@@ -4,6 +4,8 @@ import '../models/carpool_room.dart';
 
 abstract class CarpoolRepository {
   Future<CarpoolRoom> createCarpool(CreateCarpoolDto dto);
+  Future<List<CarpoolRoom>> getAllCarpools();
+  Future<CarpoolRoom> getCarpoolById(int id);
 }
 
 class CarpoolRepositoryImpl implements CarpoolRepository {
@@ -11,7 +13,17 @@ class CarpoolRepositoryImpl implements CarpoolRepository {
   CarpoolRepositoryImpl(this._ds);
 
   @override
+  Future<List<CarpoolRoom>> getAllCarpools() {
+    return _ds.fetchAll();
+  }
+
+  @override
   Future<CarpoolRoom> createCarpool(CreateCarpoolDto dto) {
     return _ds.create(dto);
+  }
+
+  @override
+  Future<CarpoolRoom> getCarpoolById(int id) {
+    return _ds.fetchById(id);
   }
 }
