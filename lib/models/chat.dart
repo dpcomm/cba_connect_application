@@ -10,13 +10,27 @@ class Chat {
         required this.message,
         required this.timestamp,
     });
+    
+    Chat copyWith({
+      int? senderId,
+      int? roomId,
+      String? message,
+      DateTime? timestamp,
+    }) {
+      return Chat(
+        senderId: senderId ?? this.senderId,
+        roomId: roomId ?? this.roomId,
+        message: message ?? this.message,
+        timestamp: timestamp ?? this.timestamp,
+      );
+    }
 
     factory Chat.fromJson(Map<String, dynamic> json) {
         return Chat(
             senderId: json['senderId'] as int,
             roomId: json['roomId'] as int,
             message: json['message'] as String,
-            timestamp: DateTime.parse(json['timestamp'] as String),
+            timestamp: DateTime.parse(json['timestamp'] as String).toLocal(),
         );
     }    
 
@@ -25,7 +39,7 @@ class Chat {
         'senderId': senderId,
         'roomId': roomId,
         'message': message,
-        'timestamp': timestamp.toIso8601String(),
+        'timestamp': timestamp.toUtc().toIso8601String(),
       };
     }
 }
