@@ -1,6 +1,7 @@
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
 import 'package:cba_connect_application/dto/create_carpool_dto.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/address_search_view.dart';
@@ -345,15 +346,30 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                           const double RETREAT_LAT = 37.833038818526134;
                           const double RETREAT_LNG = 126.94192401531457;
 
-                          /** DB 수정을 origin_address, destination_address, */
-                          /** detailed_origin, detailed_destination 4개로 정할 예정. */
-                          /** 하단 요청부는 이후 수정. */
                           /** 만날 시간은 Datetime으로 지정해야 함.  */
                           String origin;
                           String detailedOrigin;
                           String destination;
                           double originLat, originLng;
                           double destinationLat, destinationLng;
+
+                          final hour   = int.tryParse(_hourController.text) ?? 0;
+                          final minute = int.tryParse(_minuteController.text) ?? 0;
+
+                          /** 집으로 갈 땐 날짜, 시간 고정,*/
+                          /** 해당 내용은 통일된 정적 소스가 있으면 좋을 것 같음.(예를 들어 수련회 날짜 및 json데이터 참조해서...,*/
+                          final departureTime = widget.destination == 'home'
+                              ? DateTime.utc(2025, 7, 13, 13, 00)
+                              : () {
+                            final date = DateFormat('yyyy-MM-dd').parse(_dateController.text);
+                            return DateTime.utc(
+                              date.year,
+                              date.month,
+                              date.day,
+                              hour,
+                              minute,
+                            );
+                          }();
 
                           // 집으로 가는 경우는 origin이 유저설정, originDetailed O, detailedOrigin X
                           if (widget.destination == 'retreat') {
@@ -381,6 +397,7 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                           final dto = CreateCarpoolDto(
                             driverId: loginState.user!.id,
                             carInfo: _carInfoCtrl.text,
+                            departureTime: departureTime,
                             origin: origin,
                             originDetailed: detailedOrigin,
                             destination: destination,
@@ -389,7 +406,7 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                             originLat: originLat,
                             originLng: originLng,
                             destLat: destinationLat,
-                            destLng: destinationLng
+                            destLng: destinationLng,
                           );
 
                           await ref.read(registrationViewModelProvider.notifier).createCarpool(dto);
