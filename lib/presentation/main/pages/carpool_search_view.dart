@@ -86,14 +86,12 @@ class _CarpoolChatPageState extends State<CarpoolSearchView> with SingleTickerPr
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-
         backgroundColor: Colors.white,
         elevation: 0,
         titleSpacing: 16,
-        title: const Row(
+        title: Row(
           children: [
-
-            Icon(Icons.search, color: Colors.black),
+            Image.asset('assets/images/search_icon.png', width: 24, height: 24),
             SizedBox(width: 8),
             Text('카풀 찾아보기', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ],
