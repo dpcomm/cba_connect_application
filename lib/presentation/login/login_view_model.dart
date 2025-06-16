@@ -45,7 +45,6 @@ class LoginViewModel extends StateNotifier<LoginState> {
           value: response.refreshToken!,
         );
       }
-
       final socketManager = SocketManager();
       socketManager.setSocket(response.accessToken);
       socketManager.connect();
@@ -83,6 +82,30 @@ class LoginViewModel extends StateNotifier<LoginState> {
       /* 이 곳에 로딩 스피너 해제. */
       state = LoginState(status: LoginStatus.error, message: e.toString());
     }
+  }
+
+  void updateUserNameInState(String newName) {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
+    final updatedUser = currentUser.copyWith(name: newName);
+    state = LoginState(
+      status: state.status,
+      message: state.message,
+      user: updatedUser,
+    );
+  }
+
+  void updateUserPhoneInState(String newPhone) {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
+    final updatedUser = currentUser.copyWith(name: newPhone);
+    state = LoginState(
+      status: state.status,
+      message: state.message,
+      user: updatedUser,
+    );
   }
 }
 
