@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/presentation/chat/chat_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -171,6 +172,14 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                     ),
                     onPressed: () {
                       // 메시지 버튼 로직
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatView(
+                            roomId: room.id,
+                          ),
+                        ),
+                      );
                     },
                     child: const Text(
                       '메시지',

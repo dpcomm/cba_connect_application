@@ -10,8 +10,10 @@ import 'package:intl/intl.dart';
 
 class ChatView extends ConsumerStatefulWidget {
   final int roomId;
-  final String name;
-  const ChatView({super.key, required this.roomId, required this.name});
+  // final String name;
+  const ChatView({super.key, required this.roomId, 
+  // required this.name
+  });
 
   @override
   ConsumerState<ChatView> createState() => _ChatViewState();
@@ -132,7 +134,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
           // title: Text("$userName's ${widget.roomId}번 카풀 단톡방"),
-          title: Text('${widget.name}님의 카풀 메시지'),
+          // title: Text('${widget.name}님의 카풀 메시지'),
+          title: Text('${widget.roomId}번 카풀 메세지'),
           actions: const [
             Icon(Icons.person),
             SizedBox(width: 8),
