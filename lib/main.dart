@@ -16,8 +16,8 @@ class MyApp extends StatelessWidget {
       title: 'CBA Connect 카풀',
       initialRoute: '/',
       routes: {
-        '/': (_) => LoginView(),
-        // '/': (_) => CarpoolSearchView(),
+        // '/': (_) => LoginView(),
+        '/': (_) => CarpoolSearchView(),
         '/main': (_) => MainView(),
       },
     );
