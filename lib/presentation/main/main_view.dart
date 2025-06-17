@@ -1,5 +1,7 @@
 import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view.dart';
+import 'package:cba_connect_application/presentation/mycarpool/mycarpool_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/setting_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,7 +16,7 @@ class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderSt
   late TabController _tabController;
   /** 임의로 테스트하려고 주석처리 해놨습니다!*/
   // final List<Widget> _views = [CarpoolSearchView(), SearchView(), ProfileView()];
-  final List<Widget> _views = [CarpoolSearchView()];
+  final List<Widget> _views = [CarpoolSearchView(), MyCarpoolView(), SettingView()];
 
   @override
   void initState() {
@@ -33,10 +35,10 @@ class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final idx = _tabController.index;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('카풀 서비스'),
-        backgroundColor: Colors.white,
-      ),
+      // appBar: AppBar(
+      //   title: const Text('카풀 서비스'),
+      //   backgroundColor: Colors.white,
+      // ),
       bottomNavigationBar: SizedBox(
         height: 80,
         child: Material(

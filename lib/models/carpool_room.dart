@@ -66,6 +66,16 @@ class CarpoolRoom {
       return 0.0;
     }
 
+    final driverJson = json['driver'];
+    /// Map이면 파싱, 아니면 driverId만 갖는 최소 정보 객체 생성
+    final driver = (driverJson is Map<String, dynamic>)
+        ? Driver.fromJson(driverJson)
+        : Driver(
+      id: (json['driverId'] as num).toInt(),
+      name: '',
+      phone: '',
+    );
+
     return CarpoolRoom(
       id: (json['id'] as num).toInt(),
       driverId: (json['driverId'] as num).toInt(),
@@ -77,15 +87,15 @@ class CarpoolRoom {
       destinationDetailed: json['destinationDetailed'] as String? ?? '',
       seatsTotal: (json['seatsTotal'] as num).toInt(),
       seatsLeft: (json['seatsLeft'] as num).toInt(),
-      note: json['note'] as String,
+      note: json['note'] as String? ?? '',
       originLat: _toDouble(json['originLat']),
       originLng: _toDouble(json['originLng']),
       destLat: _toDouble(json['destLat']),
       destLng: _toDouble(json['destLng']),
-      isArrived: json['isArrived'] as bool,
+      isArrived: json['isArrived'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
-      driver: Driver.fromJson(json['driver'] as Map<String,dynamic>),
+      driver: driver,
     );
   }
 }

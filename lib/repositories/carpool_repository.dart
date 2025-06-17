@@ -6,6 +6,10 @@ abstract class CarpoolRepository {
   Future<CarpoolRoom> createCarpool(CreateCarpoolDto dto);
   Future<List<CarpoolRoom>> getAllCarpools();
   Future<CarpoolRoom> getCarpoolById(int id);
+  Future<List<CarpoolRoom>> getMyCarpools(int userId);
+  Future<void> joinCarpool({ required int userId, required int roomId });
+  Future<void> leaveCarpool({ required int userId, required int roomId });
+  Future<void> deleteCarpool(int roomId);
 }
 
 class CarpoolRepositoryImpl implements CarpoolRepository {
@@ -25,5 +29,25 @@ class CarpoolRepositoryImpl implements CarpoolRepository {
   @override
   Future<CarpoolRoom> getCarpoolById(int id) {
     return _ds.fetchById(id);
+  }
+
+  @override
+  Future<List<CarpoolRoom>> getMyCarpools(int userId) {
+    return _ds.fetchMyCarpools(userId);
+  }
+
+  @override
+  Future<void> joinCarpool({ required int userId, required int roomId }) {
+    return _ds.joinCarpool(userId, roomId);
+  }
+
+  @override
+  Future<void> leaveCarpool({ required int userId, required int roomId }) {
+    return _ds.leaveCarpool(userId, roomId);
+  }
+
+  @override
+  Future<void> deleteCarpool(int roomId) {
+    return _ds.deleteCarpool(roomId);
   }
 }

@@ -51,4 +51,29 @@ class User {
       updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
+  User copyWith({
+    int? id,
+    String? rank,
+    String? userId,
+    String? name,
+    String? group,
+    String? phone,
+    DateTime? birth,
+    String? gender,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      rank: rank ?? this.rank,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      group: group ?? this.group,
+      phone: phone ?? this.phone,
+      birth: birth ?? this.birth,
+      gender: gender ?? this.gender,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

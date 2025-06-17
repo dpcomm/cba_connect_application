@@ -20,10 +20,10 @@ class CarpoolDetailPopup extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context); // 팝업 닫기
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ChatView(roomId: roomId)),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (_) => ChatView(roomId: roomId)),
+                // );
               },
               child: const Text('채팅방 들어가기'),
             ),
