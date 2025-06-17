@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_detail_page_view.dart';
-import 'package:cba_connect_application/presentation/mycarpool/mycarpool_detail_page_view.dart';
+// import 'package:cba_connect_application/presentation/mycarpool/mycarpool_detail_page_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view_model.dart';
 import 'package:cba_connect_application/presentation/mycarpool/mycarpool_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
@@ -217,8 +217,8 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => MyCarpoolDetailView(
-                                id: room.id,
+                              builder: (_) => CarpoolDetailPageView(
+                                id: room.id, tabIndex: 0,
                               ),
                             ),
                           ),
