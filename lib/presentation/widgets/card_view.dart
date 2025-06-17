@@ -135,16 +135,21 @@ class _CarpoolDetailPageState extends State<CardView> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const SizedBox(height: 6),
-                            _buildInfoRow(Icons.location_pin, '시간: ${widget.time} \n장소: ${widget.location}'),
+                            _buildInfoRow(
+                                Image.asset('assets/images/time_icon.png', width: 16, height: 16),
+                                '시간: ${widget.time} \n'
+                                    '장소: ${widget.location}'),
                             const SizedBox(height: 6),
                             const Divider(),
                             const SizedBox(height: 8),
-                            _buildInfoRow(Icons.bolt, '요청사항: ${widget.message}'),
+                            _buildInfoRow(
+                                Image.asset('assets/images/requests_icon.png', width: 16, height: 16),
+                                '요청사항: ${widget.message}'),
                             const SizedBox(height: 8),
                             const Divider(),
                             const SizedBox(height: 6),
                             _buildInfoRow(
-                              Icons.people,
+                              Image.asset('assets/images/user_icon.png', width: 16, height: 16),
                               '모집인원: ${widget.currentPeople} / ${widget.totalPeople} ',
                             ),
                             const SizedBox(height: 6),
@@ -178,27 +183,20 @@ class _CarpoolDetailPageState extends State<CardView> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: Colors.grey.shade300,
-          child: Icon(
-            icon,
-            color: Colors.grey.shade700,
-            size: 18,
+  Widget _buildInfoRow(Widget icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.grey.shade300,
+            child: icon,
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+        ],
+      ),
     );
   }
 }
