@@ -154,38 +154,19 @@ class _CarpoolDetailPageState extends State<CardView> {
                       const SizedBox(height: 24),
 
                       // 하단 버튼
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Expanded(
-                            child: ButtonView(
-                              isApplied: _isApplied,
-                              onPressed: (_isApplied || widget.currentPeople >= widget.totalPeople) ? null : _applyCarpool,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(150, 48),
-                                backgroundColor: const Color(0xFFB36BFF),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                elevation: 2,
-                              ),
-                              onPressed: () {
-                                // 메시지 버튼 로직
-                              },
-                              child: const Text(
-                                '메시지',
-                                style: TextStyle(
-                                    color: Colors.white, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ],
+                      ButtonView(
+                        isOwner: false, // 운전자 여부
+                        isApplied: _isApplied,
+                        isFull: widget.currentPeople >= widget.totalPeople,
+                        onApply: _applyCarpool, // 신청 콜백
+                        onConfirm: () {
+                          // 카풀 확정 콜백
+                        },
+                        onMessage: () {
+                          // 메시지 콜백
+                        },
                       ),
+
                     ],
                   ),
                 ),
