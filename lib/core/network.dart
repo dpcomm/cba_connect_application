@@ -8,8 +8,8 @@ class Network {
   static Dio _createDio() {
     final dio = Dio(BaseOptions(
       baseUrl: AppConfig.apiBaseUrl,
-      connectTimeout: const Duration(milliseconds: 5000),
-      receiveTimeout: const Duration(milliseconds: 3000),
+      connectTimeout: const Duration(milliseconds: 15000),
+      receiveTimeout: const Duration(milliseconds: 15000),
     ));
 
     dio.interceptors.add(

@@ -43,6 +43,21 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
     final viewModel = ref.read(CarpoolDetailPageProvider.notifier);
     final userId = ref.read(loginViewModelProvider).user!.id;
 
+    Widget body;
+    switch (state.status) {
+      case CardViewStatus.initial:
+      case CardViewStatus.loading:
+        body = const Center(child: CircularProgressIndicator());
+        break;
+      case CardViewStatus.error:
+        body = Center(child: Text(state.message ?? '에러가 발생했습니다.'));
+        break;
+      case CardViewStatus.success:
+      case CardViewStatus.applied:
+        body = _buildDetailUI(state, viewModel, userId);
+        break;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -157,10 +172,10 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
               children: [
                 Expanded(
                   child: ButtonView(
-                    isApplied: !canJoin,
+                    isApplied: applied,
                     onPressed: canJoin
-                        ? null
-                        : () => viewModel.joinCarpool(userId, room.id)
+                        ? () => viewModel.joinCarpool(userId, room.id)
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 12),
