@@ -35,10 +35,10 @@ class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final idx = _tabController.index;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('카풀 서비스'),
-        backgroundColor: Colors.white,
-      ),
+      // appBar: AppBar(
+      //   title: const Text('카풀 서비스'),
+      //   backgroundColor: Colors.white,
+      // ),
       bottomNavigationBar: SizedBox(
         height: 80,
         child: Material(

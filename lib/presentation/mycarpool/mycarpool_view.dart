@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_detail_page_view.dart';
-import 'package:cba_connect_application/presentation/mycarpool/mycarpool_detail_page_view.dart';
+// import 'package:cba_connect_application/presentation/mycarpool/mycarpool_detail_page_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view_model.dart';
 import 'package:cba_connect_application/presentation/mycarpool/mycarpool_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
@@ -217,8 +217,8 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => MyCarpoolDetailView(
-                                id: room.id,
+                              builder: (_) => CarpoolDetailPageView(
+                                id: room.id, tabIndex: 0,
                               ),
                             ),
                           ),
@@ -275,7 +275,7 @@ class MyCarpoolListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 1.0),
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.0),
@@ -291,7 +291,7 @@ class MyCarpoolListItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 좌측 아이콘(도착지따라 구분)
+          // 좌측 아이콘(도착지따라 구분)         
           Row(
             children: [
               if (isOriginRetreat) // 출발지가 수련회장인 경우
@@ -332,7 +332,7 @@ class MyCarpoolListItem extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,17 +341,17 @@ class MyCarpoolListItem extends StatelessWidget {
                   children: [
                     Text(
                       origin,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     const Icon(Icons.arrow_right_alt, size: 20), // 화살표 아이콘
                     Text(
                       destination,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     // 상태 칩
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
                         color: statusBackgroundColor,
                         borderRadius: BorderRadius.circular(4),
@@ -370,12 +370,12 @@ class MyCarpoolListItem extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '출발시간 : $departureTime',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '운전자 : $driverName',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
               ],
             ),

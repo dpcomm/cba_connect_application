@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
 import 'package:cba_connect_application/presentation/widgets/button_view.dart';
 import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
-import 'package:cba_connect_application/models/carpool_room.dart';
+import '../../../login/login_view_model.dart';
 import 'carpool_detail_page_view_model.dart';
 
 class CarpoolDetailPageView extends ConsumerStatefulWidget {
@@ -40,6 +40,23 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(CarpoolDetailPageProvider);
+    final viewModel = ref.read(CarpoolDetailPageProvider.notifier);
+    final userId = ref.read(loginViewModelProvider).user!.id;
+
+    Widget body;
+    switch (state.status) {
+      case CardViewStatus.initial:
+      case CardViewStatus.loading:
+        body = const Center(child: CircularProgressIndicator());
+        break;
+      case CardViewStatus.error:
+        body = Center(child: Text(state.message ?? '에러가 발생했습니다.'));
+        break;
+      case CardViewStatus.success:
+      case CardViewStatus.applied:
+        body = _buildDetailUI(state, viewModel, userId);
+        break;
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -60,18 +77,22 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
           ? const Center(child: CircularProgressIndicator())
           : state.status == CardViewStatus.error
           ? Center(child: Text(state.message ?? '에러가 발생했습니다.'))
-          : _buildDetailUI(state.room!),
+          : _buildDetailUI(state, viewModel, userId),
     );
   }
 
-  Widget _buildDetailUI(CarpoolRoom room) {
+  Widget _buildDetailUI(CardViewState state, CarpoolDetailPageViewModel viewModel, int userId) {
+    final room = state.room!;
     final mapLat = widget.tabIndex == 0 ? room.originLat : room.destLat;
     final mapLng = widget.tabIndex == 0 ? room.originLng : room.destLng;
     final targetAddress = widget.tabIndex == 0 ? '출발: ${room.origin}' : '도착: ${room.destination}';
     final driver = room.driver;
     final current = room.seatsTotal - room.seatsLeft;
     final timeText = DateFormat('a h시 mm분', 'ko').format(room.departureTime);
+    final isOwner = userId == room.driverId;
     final isFull = current >= room.seatsTotal;
+    final applied = state.status == CardViewStatus.applied;
+    final canJoin = !isOwner && !applied && !isFull;
 
     return SingleChildScrollView(
       child: Padding(
@@ -79,7 +100,6 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 프로필
             Row(
               children: [
                 const CircleAvatar(radius: 30),
@@ -96,8 +116,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                         if (isFull) CloseBadge(),
                       ],
                     ),
-                    Text(room.carInfo ?? '',
-                        style: const TextStyle(color: Colors.grey)),
+                    Text(room.carInfo ?? '', style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
@@ -105,7 +124,6 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
 
             const SizedBox(height: 16),
 
-            // 지도
             Container(
               width: double.infinity,
               height: 300,
@@ -150,13 +168,14 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
 
             const SizedBox(height: 24),
 
-            // 하단 버튼
             Row(
               children: [
                 Expanded(
                   child: ButtonView(
-                    isApplied: _isApplied,
-                    onPressed: (_isApplied || isFull) ? null : _applyCarpool,
+                    isApplied: applied,
+                    onPressed: canJoin
+                        ? () => viewModel.joinCarpool(userId, room.id)
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -165,13 +184,13 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(150, 48),
                       backgroundColor: const Color(0xFFB36BFF),
+
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                       elevation: 2,
                     ),
                     onPressed: () {
-                      // 메시지 버튼 로직
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -183,8 +202,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                     },
                     child: const Text(
                       '메시지',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
