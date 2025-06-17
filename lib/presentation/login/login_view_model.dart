@@ -1,9 +1,11 @@
+import 'package:cba_connect_application/core/provider.dart';
 import 'package:cba_connect_application/core/secure_storage.dart';
 import 'package:cba_connect_application/datasources/auth_data_source.dart';
 import 'package:cba_connect_application/repositories/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/models/user.dart';
+import 'package:cba_connect_application/firebaseService/fcm_service.dart';
 
 // 로그인 상태값 enum(로그인 성공 여부를 따지기 위함으로, 필요할 경우에만 선언)
 enum LoginStatus { initial, loading, success, error }
@@ -21,9 +23,12 @@ class LoginState {
 
 class LoginViewModel extends StateNotifier<LoginState> {
   final AuthRepository _repository;
+  final FcmService _fcmService;
+  final socketManager = SocketManager();
+
 
   // 자식 클래스에서 생성자 호출 전 부모 클래스의 생성자 호출
-  LoginViewModel(this._repository) : super(LoginState());
+  LoginViewModel(this._repository, this._fcmService) : super(LoginState());
 
   Future<void> login(String userId, String password, bool autoLogin) async {
     // 로그인 상태 값
@@ -45,12 +50,15 @@ class LoginViewModel extends StateNotifier<LoginState> {
           value: response.refreshToken!,
         );
       }
-      final socketManager = SocketManager();
+
+      _fcmService.setToken(response.user.id);
+
       socketManager.setSocket(response.accessToken);
       socketManager.connect();
 
       // 성공했으므로 로그인 전역변수를 성공으로 변경 + user 정보 상태에 포함
       state = LoginState(status: LoginStatus.success, user: response.user);
+
     } catch (error) {
       // 실패 결과를 로그인 전역변수에 저장
       state = LoginState(status: LoginStatus.error, message: error.toString());
@@ -75,6 +83,12 @@ class LoginViewModel extends StateNotifier<LoginState> {
         key: 'access-token',
         value: response.accessToken,
       );
+
+      _fcmService.setToken(response.user.id);
+
+      socketManager.setSocket(response.accessToken);
+      socketManager.connect();
+
 
       /* 이 곳에 로딩 스피너 해제. */
       state = LoginState(status: LoginStatus.success, user: response.user);
@@ -127,5 +141,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 final loginViewModelProvider =
     StateNotifierProvider<LoginViewModel, LoginState>((ref) {
       final repo = ref.read(authRepositoryProvider);
-      return LoginViewModel(repo);
+      final fcmService = ref.read(fcmServiceProvider);
+      return LoginViewModel(repo, fcmService);
     });
