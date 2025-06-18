@@ -20,10 +20,10 @@ class LifecycleManager with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused) {
       print('앱이 백그라운드로 전환됨');
-      await SecureStorage.write(key: 'notification-config', value: 'off'); 
+      await SecureStorage.write(key: 'notification-config-now', value: 'off'); 
     } else if (state == AppLifecycleState.resumed) {
       print('앱이 포그라운드로 복귀');
-      await SecureStorage.write(key: 'notification-config', value: 'on');
+      await SecureStorage.write(key: 'notification-config-now', value: 'on');
     }
   }
 

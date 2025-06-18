@@ -83,6 +83,9 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
   final notificationConfig = await SecureStorage.read(key: 'notification-config');
   if (notificationConfig == 'off') return;
 
+  final notificationConfigNow = await SecureStorage.read(key: 'notification-config-now');
+  if (notificationConfigNow == 'off') return;
+  
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -217,6 +220,10 @@ Future<void> fbMsgForegroundHandler(
 
   final notificationConfig = await SecureStorage.read(key: 'notification-config');
   if (notificationConfig == 'off') return;
+
+  final notificationConfigNow = await SecureStorage.read(key: 'notification-config-now');
+  if (notificationConfigNow == 'off') return;
+
 
   AndroidNotificationDetails androidDetails;
 
