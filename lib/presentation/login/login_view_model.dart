@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/models/user.dart';
 import 'package:cba_connect_application/firebaseService/fcm_service.dart';
+import 'package:cba_connect_application/core/lifecycle_manager.dart';
 
 // 로그인 상태값 enum(로그인 성공 여부를 따지기 위함으로, 필요할 경우에만 선언)
 enum LoginStatus { initial, loading, success, error }
@@ -22,13 +23,14 @@ class LoginState {
 }
 
 class LoginViewModel extends StateNotifier<LoginState> {
+  final Ref ref;
   final AuthRepository _repository;
   final FcmService _fcmService;
   final socketManager = SocketManager();
 
 
   // 자식 클래스에서 생성자 호출 전 부모 클래스의 생성자 호출
-  LoginViewModel(this._repository, this._fcmService) : super(LoginState());
+  LoginViewModel(this.ref, this._repository, this._fcmService) : super(LoginState());
 
   Future<void> login(String userId, String password, bool autoLogin) async {
     // 로그인 상태 값
@@ -49,6 +51,9 @@ class LoginViewModel extends StateNotifier<LoginState> {
           key: 'refresh-token',
           value: response.refreshToken!,
         );
+      } else {
+        final lifecycleManager = ref.read(lifecycleManagerProvider(response.user.id));
+        lifecycleManager.start();
       }
 
       _fcmService.setToken(response.user.id);
@@ -142,5 +147,5 @@ final loginViewModelProvider =
     StateNotifierProvider<LoginViewModel, LoginState>((ref) {
       final repo = ref.read(authRepositoryProvider);
       final fcmService = ref.read(fcmServiceProvider);
-      return LoginViewModel(repo, fcmService);
+      return LoginViewModel(ref, repo, fcmService);
     });

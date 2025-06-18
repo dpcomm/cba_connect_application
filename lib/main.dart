@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view.dart';
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -17,8 +16,8 @@ class MyApp extends StatelessWidget {
       title: 'CBA Connect 카풀',
       initialRoute: '/',
       routes: {
-        // '/': (_) => LoginView(),
-        '/': (_) => CarpoolSearchView(),
+        '/': (_) => LoginView(),
+        //'/': (_) => CarpoolSearchView(),
         '/main': (_) => MainView(),
       },
     );
