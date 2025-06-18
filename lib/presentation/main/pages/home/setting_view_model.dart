@@ -126,7 +126,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
     
     // SecureStorage에 저장
     final storageValue = newValue ? 'on' : 'off';
-    await SecureStorage.write(key: 'notification-config-now', value: storageValue);
+    await SecureStorage.write(key: 'notification-config', value: storageValue);
   }
 
   /// 이름 저장
