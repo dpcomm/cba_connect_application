@@ -1,6 +1,8 @@
 import 'package:cba_connect_application/core/lifecycle_manager.dart';
 import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart';
 import 'package:cba_connect_application/repositories/chat_repository.dart';
+import 'package:cba_connect_application/repositories/carpool_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/socket_event_handler/chat_event_handler.dart';
@@ -26,7 +28,8 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 final chatViewModelProvider = StateNotifierProvider.family
     .autoDispose<ChatViewModel, List<ChatItem>, int>((ref, roomId) {
       final repository = ref.watch(chatRepositoryProvider);
-      return ChatViewModel(roomId: roomId, repository: repository, ref: ref);
+      final carpoolRepository = ref.watch(carpoolRepositoryProvider);
+      return ChatViewModel(roomId: roomId, repository: repository, carpoolRepository: carpoolRepository, ref: ref);
 });
 
 
