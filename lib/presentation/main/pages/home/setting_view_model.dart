@@ -7,6 +7,7 @@ import 'package:cba_connect_application/repositories/user_repository.dart';
 import 'package:cba_connect_application/datasources/user_data_source.dart';
 import 'package:cba_connect_application/core/custom_exception.dart';
 import 'package:cba_connect_application/dto/update_user_dto.dart';
+import 'package:cba_connect_application/core/secure_storage.dart';
 
 
 enum SettingStatus { initial, loading, success, error }
@@ -17,6 +18,7 @@ class SettingState {
   final bool isEditingName;
   final bool isEditingPhone;
   final bool isEditingCarInfo;
+  final bool fcmEnabled;
 
   const SettingState({
     this.status = SettingStatus.initial,
@@ -24,6 +26,7 @@ class SettingState {
     this.isEditingName = false,
     this.isEditingPhone = false,
     this.isEditingCarInfo = false,
+    this.fcmEnabled = true, // 기본값 : 수신 상태
   });
 
   // 상태를 복사하여 새로운 상태를 생성하는 헬퍼 메서드
@@ -33,6 +36,7 @@ class SettingState {
     bool? isEditingName,
     bool? isEditingPhone,
     bool? isEditingCarInfo,
+    bool? fcmEnabled,
   }) {
     return SettingState(
       status: status ?? this.status,
@@ -40,6 +44,7 @@ class SettingState {
       isEditingName: isEditingName ?? this.isEditingName,
       isEditingPhone: isEditingPhone ?? this.isEditingPhone,
       isEditingCarInfo: isEditingCarInfo ?? this.isEditingCarInfo,
+      fcmEnabled: fcmEnabled ?? this.fcmEnabled,
     );
   }
 }
@@ -53,6 +58,9 @@ class SettingViewModel extends StateNotifier<SettingState> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController carInfoController = TextEditingController();
 
+  final bool _fcmEnabled = true; // 기본값 (옵션)
+  bool get fcmEnabled => _fcmEnabled;
+
   // ViewModel 생성자에서 Ref를 주입받아 다른 Provider에 접근
   SettingViewModel(this._ref, this._userRepository) : super(const SettingState()) {
     _initializeUserSettings(); // ViewModel이 생성될 때 사용자 설정 정보를 초기화
@@ -63,7 +71,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
 
     _prefs = await SharedPreferences.getInstance();
 
-    // 1. 이름, 전화번호 <- 로그인 정보
+    // 1 & 2. 이름, 전화번호 <- 로그인 정보
     final loginState = _ref.read(loginViewModelProvider);
     if (loginState.user != null) {
       userNameController.text = loginState.user!.name;
@@ -73,13 +81,18 @@ class SettingViewModel extends StateNotifier<SettingState> {
       phoneController.text = '';
     }
 
-    // 2. 차 정보 <- SharedPreferences
+    // 3. 차 정보 <- SharedPreferences
     final String? carInfoString = _prefs.getString('car_info_${loginState.user?.id}');
     if (carInfoString != null && carInfoString.isNotEmpty) {
       carInfoController.text = carInfoString;
     } else {
       carInfoController.text = '';
     }
+
+    // 4. FCM 설정 상태 불러오기 + 상태에 반영
+    final fcm = await SecureStorage.read(key: 'notification-config-now');
+    final fcmEnabled = fcm == null ? true : (fcm == 'on');
+    state = state.copyWith(fcmEnabled: fcmEnabled);
   }
 
   /// 이름을 수정 모드로 토글하고, 수정 완료 시 이름 저장
@@ -104,6 +117,16 @@ class SettingViewModel extends StateNotifier<SettingState> {
       _saveCarInfo(carInfoController.text, context);
     }
     state = state.copyWith(isEditingCarInfo: !state.isEditingCarInfo, status: SettingStatus.initial);
+  }
+
+  /// FCM 알림 설정 토글하고, 설정을 SecureStorage에 저장
+  Future<void> toggleFcmEnabled() async {
+    final newValue = !state.fcmEnabled;
+    state = state.copyWith(fcmEnabled: newValue);
+    
+    // SecureStorage에 저장
+    final storageValue = newValue ? 'on' : 'off';
+    await SecureStorage.write(key: 'notification-config-now', value: storageValue);
   }
 
   /// 이름 저장
