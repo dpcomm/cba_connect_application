@@ -1,11 +1,9 @@
+import 'package:cba_connect_application/presentation/mycarpool/mycarpool_detail_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/carpool_detail_page_view.dart';
-// import 'package:cba_connect_application/presentation/mycarpool/mycarpool_detail_page_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view_model.dart';
 import 'package:cba_connect_application/presentation/mycarpool/mycarpool_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 
@@ -62,7 +60,7 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(carpoolSearchProvider);
+    final state = ref.watch(myCarpoolProvider);
     final loginState = ref.watch(loginViewModelProvider);
 
     // 로그인 상태 확인
@@ -85,7 +83,7 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
 
     // 카풀 목록 필터링
     List<CarpoolRoom> filteredRooms = [];
-    if (state.status == CarpoolSearchStatus.success) {
+    if (state.status == CarpoolListStatus.success) {
       final allMyRooms = state.rooms;
       switch (_tabController.index) {
         case 0: // 전체
@@ -169,12 +167,12 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
             Expanded(
               child: () {
                 switch (state.status) {
-                  case CarpoolSearchStatus.loading:
+                  case CarpoolListStatus.loading:
                     return const Center(child: CircularProgressIndicator());
-                  case CarpoolSearchStatus.error:
+                  case CarpoolListStatus.error:
                     return Center(child: Text(state.message ?? '내 카풀 목록을 불러오는데 에러가 발생했습니다.'));
-                  case CarpoolSearchStatus.success:
-                  case CarpoolSearchStatus.initial:
+                  case CarpoolListStatus.success:
+                  case CarpoolListStatus.initial:
                     if (filteredRooms.isEmpty) {
                         String emptyMessage;
                         switch (_tabController.index) {
@@ -217,9 +215,7 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CarpoolDetailPageView(
-                                id: room.id, tabIndex: 0,
-                              ),
+                              builder: (_) => MyCarpoolDetailPageView(id: room.id),
                             ),
                           ),
                           child: MyCarpoolListItem(
@@ -343,7 +339,7 @@ class MyCarpoolListItem extends StatelessWidget {
                       origin,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
-                    const Icon(Icons.arrow_right_alt, size: 20), // 화살표 아이콘
+                    const Icon(Icons.arrow_right_alt, size: 20),
                     Text(
                       destination,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
