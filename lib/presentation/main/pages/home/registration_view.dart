@@ -8,7 +8,7 @@ import 'package:cba_connect_application/presentation/main/pages/home/address_sea
 import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart';
 import 'package:cba_connect_application/presentation/widgets/date_time_view.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
-
+import 'package:cba_connect_application/presentation/main/pages/home/setting_view_model.dart';
 
 class RegistrationView extends ConsumerStatefulWidget {
   final String destination;
@@ -35,6 +35,20 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
   int _capacity = 1; // 인원
 
   final GlobalKey<KakaoMapNativeViewState> _mapKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      final settingViewModel = ref.read(settingViewModelProvider.notifier);
+      final defaultCarInfo = settingViewModel.carInfoController.text;
+      if (defaultCarInfo.isNotEmpty) {
+        _carInfoCtrl.text = defaultCarInfo;
+        // 필요시 setState(() {}); // UI 반영 문제 시 사용
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -86,7 +100,7 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                   const SizedBox(height: 6),
                   _buildInputField(
                     controller: _carInfoCtrl,
-                    hint: '(셀토스/흰색/00가0000)'
+                    hint: '셀토스/흰색/00가0000'
                   ),
                   const SizedBox(height: 20),
 
