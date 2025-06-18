@@ -8,8 +8,9 @@ abstract class ChatItem {
 class ChatMessageItem implements ChatItem {
   final Chat chat;
   final ChatStatus status;
+  final String senderName;
 
-  ChatMessageItem({required this.chat, required this.status});
+  ChatMessageItem({required this.chat, required this.status, required this.senderName});
 
   @override
   bool operator ==(Object other) =>
@@ -17,7 +18,8 @@ class ChatMessageItem implements ChatItem {
       (other is ChatMessageItem &&
           runtimeType == other.runtimeType &&
           chat == other.chat &&
-          status == other.status);
+          status == other.status && 
+          senderName == other.senderName);
 
   @override
   int get hashCode => chat.hashCode ^ status.hashCode;

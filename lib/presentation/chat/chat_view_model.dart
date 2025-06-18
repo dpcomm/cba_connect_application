@@ -9,14 +9,22 @@ import 'dart:async';
 import 'package:collection/collection.dart'; // lastOrNull, firstOrNull 사용을 위해 추가
 import 'package:intl/intl.dart'; // DateFormat 사용을 위해 추가
 import 'package:flutter/material.dart';
+import 'package:cba_connect_application/repositories/carpool_repository.dart';
+import 'package:cba_connect_application/models/carpool_room.dart';
 
+
+final chatRoomDetailProvider = StateProvider.family<CarpoolRoomDetail?, int>((ref, roomId) {
+  return null; // 초기값은 null
+});
 
 class ChatViewModel extends StateNotifier<List<ChatItem>> {
   final int roomId;
   final ChatRepository _repository;
+  final CarpoolRepository _carpoolRepository;
   final Ref ref;
 
   int? currentUserId;
+  Map<int, String> _membersMap = {};
 
   bool _isLoadingPreviousMessages = false; // 이전 메시지 로드 중 플래그 추가
   bool _hasMorePreviousMessages = true; // 서버에 더 불러올 '이전' 메시지가 있는지 여부
@@ -41,19 +49,22 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
   ChatViewModel({
     required this.roomId,
     required ChatRepository repository,
+    required CarpoolRepository carpoolRepository,
     required this.ref,
   }) : _repository = repository,
+       _carpoolRepository = carpoolRepository,
        super([]) {
-    print('[ChatViewModel] 생성자 호출, $roomId번 채팅방');
+    // print('[ChatViewModel] 생성자 호출, $roomId번 채팅방');
 
     _repository.setRoomId(roomId);
 
     final loginState = ref.watch(loginViewModelProvider);
     currentUserId = loginState.user?.id;
-    print('[ChatViewModel] currentUserId=$currentUserId');
+    // print('[ChatViewModel] currentUserId=$currentUserId');
 
     _repository.setSenderId(currentUserId!);
 
+    /*
     _init().then((_) {
       if (!_initialLoadCompleter.isCompleted) {
         _initialLoadCompleter.complete();
@@ -67,6 +78,29 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
       }
       print('[ChatViewModel] _init 실패: $e');
     });
+    */
+
+    _loadMembersMap().then((_) {
+      _init().then((_) {
+        if (!_initialLoadCompleter.isCompleted) {
+          _initialLoadCompleter.complete();
+        }
+        print('[ChatViewModel] _init 완료');
+        // _init 완료 후, 상태에 따라 스크롤 위치 지정
+        _determineInitialScrollPosition();
+      }).catchError((e) {
+        if (!_initialLoadCompleter.isCompleted) {
+          _initialLoadCompleter.completeError(e);
+        }
+        print('[ChatViewModel] _init 실패: $e');
+      });
+    }).catchError((e) {
+      print('[ChatViewModel] _loadMembersMap 실패: $e');
+      // 멤버 맵 로드 실패 시에도 초기 로드 완료 처리 (UI가 무한 대기하지 않도록)
+      if (!_initialLoadCompleter.isCompleted) {
+        _initialLoadCompleter.completeError(e);
+      }
+    });
 
     _repository.registerListener(_onReceived);
 
@@ -75,6 +109,22 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
       await _saveRecentMessagesToPrefs(currentStateSnapshot);
       print('[ChatViewModel][ref.onDispose] Prefs - state 저장 완료');
     });
+  }
+
+  // 카풀 멤버 정보를 불러와 _membersMap을 초기화하고, CarpoolRoomDetail을 저장하는 메서드
+  Future<void> _loadMembersMap() async {
+    try {
+      final roomDetail = await _carpoolRepository.fetchCarpoolDetails(roomId);
+      ref.read(chatRoomDetailProvider(roomId).notifier).state = roomDetail;
+      
+      _membersMap[roomDetail.room.driver.id] = roomDetail.room.driver.name;
+      for (var member in roomDetail.members) {
+        _membersMap[member.userId] = member.name;
+      }
+      print('[ChatViewModel][_loadMembersMap] 멤버 맵 및 CarpoolRoomDetail 로드 완료: $_membersMap');
+    } catch (e) {
+      print('[ChatViewModel][_loadMembersMap] 멤버 맵 로드 실패: $e');
+    }
   }
 
   // 초기 메세지 로드 및 처리
@@ -101,11 +151,10 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
           final bool requestAll = lastMessage == null;  // 처음 한 번은 true
           final newMessages = await _repository.requestUnreadMessage(lastMessage, requestAll);
           if (newMessages == null || newMessages.isEmpty) {
-            // print('[ChatViewModel][_init] 모든 메세지 50개씩 불러오는 중-newMessages => ${allRawMessages.length}개');
             print('[ChatViewModel][_init] 모든 메세지 불러오기 - 불러온 메세지 없음 => ${allRawMessages.length}개');
             hasMore = false;
           } else {
-            allRawMessages.addAll(newMessages.map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success)));
+            allRawMessages.addAll(newMessages.map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success, senderName: _membersMap[chat.senderId] ?? '알 수 없음',)));
             print('[ChatViewModel][_init] 모든 메세지 50개씩 불러오는 중-allRawMessages => ${allRawMessages.length}개');
             
             if (newMessages.length < 50) {
@@ -126,10 +175,18 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
       // 1-2. 로컬에 저장된 메세지 있음(안읽은 메세지 불러오기)
         print('[ChatViewModel][_init] 로컬에 저장된 메세지 => ${cached.length}개');
 
-        allRawMessages.addAll(cached);
+        final updatedCached = cached.map((item) {
+          return ChatMessageItem(
+            chat: item.chat,
+            status: item.status,
+            senderName: _membersMap[item.chat.senderId] ?? '알 수 없음',
+          );
+        }).toList();
+
+        allRawMessages.addAll(updatedCached);
         print('[ChatViewModel][_init] allRawMessages((1)로컬 메세지 추가) => ${allRawMessages.length}개');
 
-        Chat currentRecentChat = cached.last.chat;
+        Chat currentRecentChat = updatedCached.last.chat;
         print('[ChatViewModel][_init] 로컬에 저장된 메세지(recentChat) : $currentRecentChat, timestamp: ${currentRecentChat.timestamp}');
 
         // 안읽은 메세지 불러오기(recentChat 기준)
@@ -144,7 +201,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
           allRawMessages.add(UnreadDividerItem(timestamp: unreadDividerTimestamp));
           print('[ChatViewModel][_init] "안읽은 메시지 구분선" 추가');
 
-          List<Chat>? fetchedUnreadMessages = [];
+          List<Chat> fetchedUnreadMessages = [];
           fetchedUnreadMessages.addAll(unreadResponse);
           currentRecentChat = unreadResponse.last;
 
@@ -160,7 +217,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
               break; // 50개 미만이면 더 이상 메시지 없음
             }
           }
-          allRawMessages.addAll(fetchedUnreadMessages.map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success)));
+          allRawMessages.addAll(fetchedUnreadMessages.map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success, senderName: _membersMap[chat.senderId] ?? '알 수 없음',)));
           // print('[ChatViewModel][_init] 서버 안읽은 메세지 불러옴-allRawMessages (추가) => ${allRawMessages.length}개');
         } else {
           print('[ChatViewModel][_init] 안읽은 메세지 없음. 구분선 스킵.');
@@ -202,7 +259,8 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
             (s) => s.name == statusString,
             orElse: () => ChatStatus.success, // 일치하는 enum 값 없으면 success
           );
-          loadedChatItems.add(ChatMessageItem(chat: chat, status: status));
+          final senderName = e['senderName'] as String ?? '';
+          loadedChatItems.add(ChatMessageItem(chat: chat, status: status, senderName: senderName));
         } catch (e) {
           print('[ChatViewModel][_loadMessagesFromPrefs] 개별 메시지 파싱 오류: $e');
         }
@@ -216,7 +274,6 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
 
   // 최근 메세지 50개 Prefs에 저장하기
   Future<void> _saveRecentMessagesToPrefs(List<ChatItem> chatItemsToSave) async {
-    print('[ChatViewModel][_saveRecentMessagesToPrefs] 최근 메시지 저장 시작');
     final prefs = await SharedPreferences.getInstance();
     if (currentUserId == null) {
       print('[ChatViewModel][_saveRecentMessagesToPrefs] currentUserId가 null이므로 캐시 저장 스킵');
@@ -229,6 +286,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
     final jsonList = messagesToProcess.map((item) => {
       'chat': item.chat.toJson(),
       'status': item.status.name,
+      'senderName': item.senderName,
     }).toList();
     final jsonString = jsonEncode(jsonList);
     await prefs.setString(cacheKey, jsonString);
@@ -241,7 +299,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
 
     // 현재 ChatMessageItem 목록만 추출 (구분선들은 배제)
     final List<ChatMessageItem> currentChatMessages = state.whereType<ChatMessageItem>().toList();
-    final newChatMessageItem = ChatMessageItem(chat: chat, status: ChatStatus.success);
+    final newChatMessageItem = ChatMessageItem(chat: chat, status: ChatStatus.success, senderName: _membersMap[chat.senderId] ?? '알 수 없음',);
 
     // 모든 ChatMessageItem을 합쳐서 _updateStateWithDividers로 전달
     final List<ChatItem> combinedRawItems = [...currentChatMessages, newChatMessageItem];
@@ -273,15 +331,16 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
   Future<void> sendChat(Chat chat) async {
 
     if (currentUserId == null) return;
+    final loginState = ref.read(loginViewModelProvider);
 
-    final sendingChatItem = ChatMessageItem(chat: chat, status: ChatStatus.loading);
+    final sendingChatItem = ChatMessageItem(chat: chat, status: ChatStatus.loading, senderName: _membersMap[currentUserId!] ?? loginState.user?.name ?? '',);
 
     // 현재 ChatMessageItem 목록만 추출하여 로딩 메시지 추가
     final List<ChatMessageItem> currentChatMessages = state.whereType<ChatMessageItem>().toList();
     final List<ChatItem> rawItemsWithLoading = [...currentChatMessages, sendingChatItem];
     _updateStateWithDividers(rawItemsWithLoading); // UI에 로딩 메시지 표시
 
-    print('[ChatViewModel][sendChat] 보내기 전 state => ${state.length}개 (로딩 메시지 추가)');
+    // print('[ChatViewModel][sendChat] 보내기 전 state => ${state.length}개 (로딩 메시지 추가)');
     _scrollToBottomController.add(null); // 로딩 메시지 추가 후 바로 스크롤
 
     final sent = await _repository.sendChat(chat);
@@ -296,17 +355,17 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
       item.chat.message == chat.message) {
       if (sent == null) {
         print('[ChatViewModel][sendChat] 메시지 전송 실패: ${chat.message}');
-        return ChatMessageItem(chat: chat, status: ChatStatus.failed);
+        return ChatMessageItem(chat: chat, status: ChatStatus.failed, senderName: _membersMap[chat.senderId] ?? '알 수 없음',);
       } else {
         print('[ChatViewModel][sendChat] 메시지 전송 성공: ${sent.message}');
-        return ChatMessageItem(chat: sent, status: ChatStatus.success); // 성공 시 서버에서 받은 sent Chat 객체 사용
+        return ChatMessageItem(chat: sent, status: ChatStatus.success, senderName: _membersMap[chat.senderId] ?? '알 수 없음',); // 성공 시 서버에서 받은 sent Chat 객체 사용
        }
     }
     return item;
     }).toList();
 
     _updateStateWithDividers(updatedMessages);
-    print('[ChatViewModel][sendChat] 보내기 후 state => ${state.length}개 (상태 업데이트)');
+    // print('[ChatViewModel][sendChat] 보내기 후 state => ${state.length}개 (상태 업데이트)');
     // _scrollToBottomController.add(null); // 이미 위에서 스크롤했으므로 필요 없을 수도 있음
   }
 
@@ -321,7 +380,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
     }
 
     _isLoadingPreviousMessages = true;
-    print('[ChatViewModel][loadPreviousMessages] 이전 메시지 로드 시작');
+    // print('[ChatViewModel][loadPreviousMessages] 이전 메시지 로드 시작');
 
     try {
       // 현재 state에서 가장 오래된 ChatMessageItem 찾기 (firstOrNull 사용)
@@ -367,7 +426,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
         final previousChatItems = previousMessages
             .where((chat) =>
                 !existingKeys.contains('${chat.message}_${chat.timestamp.toIso8601String()}'))
-            .map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success))
+            .map((chat) => ChatMessageItem(chat: chat, status: ChatStatus.success, senderName: _membersMap[chat.senderId] ?? '알 수 없음',))
             .toList();
 
         // 새로 로드된 메시지 개수가 50개 미만이면 더 이상 이전 메시지가 없는 것으로 판단
@@ -483,7 +542,7 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
 
     if (currentItems.isEmpty) {
       currentItems.add(DateDividerItem(date: newDate));
-      currentItems.add(ChatMessageItem(chat: newChat, status: ChatStatus.success));
+      currentItems.add(ChatMessageItem(chat: newChat, status: ChatStatus.success, senderName: _membersMap[newChat.senderId] ?? '알 수 없음',));
     } else {
       ChatItem lastChatItem = currentItems.last;
       
@@ -501,14 +560,14 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
           print('[ChatViewModel][_updateDateDivider] 날짜 변경 감지. 날짜 구분선 추가.');
           currentItems.add(DateDividerItem(date: newDate));
         }
-      currentItems.add(ChatMessageItem(chat: newChat, status: ChatStatus.success));
+      currentItems.add(ChatMessageItem(chat: newChat, status: ChatStatus.success, senderName: _membersMap[newChat.senderId] ?? '알 수 없음'));
       } 
     }
     state = currentItems;
     print('[ChatViewModel][_updateDateDivider] 메시지 추가 및 상태 업데이트. 총 ${state.length}개.');
   }
   
-  // 로컬 캐시 지우기 위한 테스트 코드(MyApp 확인)
+  // 로컬 캐시 지우기 위한 테스트 코드 (MyApp 확인)
   Future<void> deleteChatMessagesForRoom(int userId, int roomId) async {
     final prefs = await SharedPreferences.getInstance();
     final cacheKey = 'chat_cache_${userId}_$roomId';
@@ -545,11 +604,12 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
 
   @override
   void dispose() {
-    print('[ChatViewModel][dispose] 뷰모델 dispose 메서드 호출됨 (저장 로직은 ref.onDispose에서 처리)');
+    // print('[ChatViewModel][dispose] 뷰모델 dispose 메서드 호출됨 (저장 로직은 ref.onDispose에서 처리)');
     _hasUnreadMessagesDivider = false;
     _repository.dispose();
     _scrollToBottomController.close();
     _scrollToIndexController.close();
+    _unreadDividerIndexController.close();
     super.dispose();
   }
 }
