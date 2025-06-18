@@ -186,7 +186,7 @@ class _SettingViewState extends ConsumerState<SettingView> {
               controller: settingViewModel.carInfoController,
               isEditing: settingState.isEditingCarInfo,
               onToggleEdit: () => settingViewModel.toggleCarInfoEditMode(context),
-              hintText: '차종 / 컬러 / 번호 형식으로 입력',
+              hintText: '차종/색깔/번호',
             ),
 
             const SizedBox(height: 40),
