@@ -17,10 +17,14 @@ class AddressDataSourceImpl implements AddressDataSource {
   @override
   Future<List<AddressResult>> searchAddresses(String query) async {
     try {
+      print("11쿼리데이터 $query");
       final response = await _dio.get(
         'https://dapi.kakao.com/v2/local/search/address.json',
         queryParameters: {'query': query, 'size': 15},
-        options: Options(headers: {'Authorization': 'KakaoAK $_kakaoKey'}),
+        options: Options(
+            headers: {'Authorization': 'KakaoAK $_kakaoKey'},
+            extra: {'skipAuth': true},
+        ),
       );
       final items = (response.data['documents'] as List);
       return items.map((e) => AddressResult(

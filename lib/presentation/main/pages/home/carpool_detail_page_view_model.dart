@@ -45,11 +45,13 @@ class CarpoolDetailPageViewModel extends StateNotifier<CardViewState> {
   }
 
   Future<void> joinCarpool(int userId, int roomId) async {
+    final previous = state.room;
     state = const CardViewState(status: CardViewStatus.loading);
     try {
       await _repo.joinCarpool(userId: userId, roomId: roomId);
       state = CardViewState(
-        status: CardViewStatus.success,
+        status: CardViewStatus.applied,
+        room: previous,
       );
     } on NetworkException catch (e) {
       state = CardViewState(

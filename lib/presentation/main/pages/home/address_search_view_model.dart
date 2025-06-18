@@ -5,7 +5,6 @@ import 'package:cba_connect_application/core/custom_exception.dart';
 import 'package:cba_connect_application/datasources/address_data_source.dart';
 import 'package:cba_connect_application/repositories/address_repository.dart';
 import 'package:cba_connect_application/models/address_result.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddressSearchState {
@@ -19,8 +18,7 @@ class AddressSearchState {
   });
 }
 
-class AddressSearchViewModel
-    extends StateNotifier<AddressSearchState> {
+class AddressSearchViewModel extends StateNotifier<AddressSearchState> {
   AddressSearchViewModel(this._repo) : super(const AddressSearchState());
 
   final AddressRepository _repo;

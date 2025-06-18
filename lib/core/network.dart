@@ -15,8 +15,10 @@ class Network {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          if (options.extra['skipAuth'] == true) {
+            return handler.next(options);
+          }
           final token = await SecureStorage.read(key: 'access-token');
-          print('▶ Authorization header: Bearer $token');
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
