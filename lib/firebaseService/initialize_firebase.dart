@@ -127,6 +127,7 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
             groupKey: message.data['roomId'],
             channelDescription: channel.description,
             importance: channel.importance,
+            icon: '@mipmap/ic_launcher',
             playSound: false,
           ),
           // iOS: const DarwinNotificationDetails(
@@ -148,6 +149,7 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
             setAsGroupSummary: true,
             channelDescription: channel.description,
             importance: channel.importance,
+            icon: '@mipmap/ic_launcher',
             playSound: false,
           ),
           // iOS: const DarwinNotificationDetails(
@@ -175,6 +177,7 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
             channel.id,
             channel.name,
             channelDescription: channel.description,
+            icon: '@mipmap/ic_launcher',
             playSound: false,
           ),
           // iOS: const DarwinNotificationDetails(
@@ -201,6 +204,7 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
             channel.id,
             channel.name,
             channelDescription: channel.description,
+            icon: '@mipmap/ic_launcher',
             playSound: false,
           ),
           // iOS: const DarwinNotificationDetails(
@@ -244,6 +248,7 @@ Future<void> fbMsgForegroundHandler(
       androidCarpoolNotificationChannel.name,
       channelDescription: androidCarpoolNotificationChannel.description,
       importance: androidCarpoolNotificationChannel.importance,
+      icon: '@mipmap/ic_launcher',
       playSound: false,
     );    
   } else {
@@ -252,6 +257,7 @@ Future<void> fbMsgForegroundHandler(
       'default notification',
       channelDescription: '기본 알림 채널',
       importance: Importance.defaultImportance,
+      icon: '@mipmap/ic_launcher',
       playSound: false,
     );        
   }
