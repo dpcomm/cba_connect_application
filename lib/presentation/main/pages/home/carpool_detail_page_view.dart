@@ -147,24 +147,25 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
             const SizedBox(height: 24),
 
             _buildInfoRow(
-              Icons.access_time,
+              Image.asset('assets/images/time_icon.png', width: 24, height: 24),
               '시간: $timeText',
             ),
             const Divider(),
             _buildInfoRow(
-              Icons.location_pin,
+              Image.asset('assets/images/departure_icon.png', width: 24, height: 24),
               targetAddress,
             ),
             const Divider(),
             _buildInfoRow(
-              Icons.people,
+              Image.asset('assets/images/user_icon.png', width: 24, height: 24),
               '모집인원: $current/${room.seatsTotal}',
             ),
             const Divider(),
             _buildInfoRow(
-              Icons.note,
+              Image.asset('assets/images/requests_icon.png', width: 24, height: 24),
               '요청사항: ${room.note ?? ''}',
             ),
+
 
             const SizedBox(height: 24),
 
@@ -214,7 +215,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(Widget icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -222,7 +223,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
           CircleAvatar(
             radius: 18,
             backgroundColor: Colors.grey.shade300,
-            child: Icon(icon, color: Colors.grey.shade700, size: 18),
+            child: icon,
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
