@@ -7,6 +7,7 @@ import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // 전화 걸기 기능 추가
 
 class ChatView extends ConsumerStatefulWidget {
   final int roomId;
@@ -37,41 +38,28 @@ class _ChatViewState extends ConsumerState<ChatView> {
 
     // ViewModel에서 맨 위(0번 인덱스)로 스크롤하라는 신호가 올 때 처리
     chatViewModel.scrollToIndexStream.listen((index) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) {
-        print('[ChatView] scrollToIndexStream: ScrollController clients 없음. 스크롤 지시 무시.');
-        return;
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollController.hasClients) {
+          print('[ChatView] scrollToIndexStream: ScrollController clients 없음. 스크롤 지시 무시.');
+          return;
+        }
 
-      if (index == 0) { // 맨 위로 스크롤 (캐시 없음 시)
-        _scrollController.jumpTo(_scrollController.position.minScrollExtent);
-        print('[ChatView] scrollToIndexStream: 맨 위(0번째 인덱스)로 점프 지시 받음');
-      } else if (index != null && index >= 0 && index < chatViewModel.state.length) {
-        // 특정 인덱스 (구분선)로 스크롤 지시
-        final double offset = index * _chatItemEstimatedHeight; // <-- 인덱스에 대략적인 아이템 높이를 곱하여 오프셋 계산
-        _scrollController.jumpTo(offset); // 계산된 오프셋으로 이동
-        print('[ChatView] scrollToIndexStream: ${index}번 인덱스 아이템으로 대략적인 스크롤 지시 받음');
-      } else if (index == null) { // null 지시 (맨 아래로 스크롤)
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-        print('[ChatView] scrollToIndexStream: null 지시, 맨 아래로 점프 지시 받음');
-      } else {
-        print('[ChatView] scrollToIndexStream: 유효하지 않은 인덱스 또는 알 수 없는 지시: $index');
-      }
+        if (index == 0) { // 맨 위로 스크롤 (캐시 없음 시)
+          _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+          print('[ChatView] scrollToIndexStream: 맨 위(0번째 인덱스)로 점프 지시 받음');
+        } else if (index != null && index >= 0 && index < chatViewModel.state.length) {
+          // 특정 인덱스 (구분선)로 스크롤 지시
+          final double offset = index * _chatItemEstimatedHeight; // <-- 인덱스에 대략적인 아이템 높이를 곱하여 오프셋 계산
+          _scrollController.jumpTo(offset); // 계산된 오프셋으로 이동
+          print('[ChatView] scrollToIndexStream: ${index}번 인덱스 아이템으로 대략적인 스크롤 지시 받음');
+        } else if (index == null) { // null 지시 (맨 아래로 스크롤)
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          print('[ChatView] scrollToIndexStream: null 지시, 맨 아래로 점프 지시 받음');
+        } else {
+          print('[ChatView] scrollToIndexStream: 유효하지 않은 인덱스 또는 알 수 없는 지시: $index');
+        }
+      });
     });
-  });
-
-    /*
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-    await Future.delayed(Duration(milliseconds: 200)); // layout 반영 대기
-    if (_scrollController.hasClients) {
-      try {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      } catch (e) {
-        // 무시 가능한 스크롤 예외
-      }
-    }
-  });
-  */
   }
 
   void _scrollListener() {
@@ -92,6 +80,45 @@ class _ChatViewState extends ConsumerState<ChatView> {
     // 스크롤이 맨 위로 도달했는지 확인 (또는 특정 임계값)
     if (_scrollController.position.pixels == _scrollController.position.minScrollExtent) {
       ref.read(chatViewModelProvider(widget.roomId).notifier).loadPreviousMessages();
+    }
+  }
+
+  // 운전자에게 전화 걸기 함수
+  Future<void> _makePhoneCall(String phone) async {
+    print('[ChatView][_makePhoneCall] 시도 전화번호: $phone');
+
+    // 전화번호가 비어있는지 다시 한번 확인
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('전화번호가 유효하지 않습니다.')),
+      );
+      print('[ChatView][_makePhoneCall] 전화번호가 비어있습니다.');
+      return;
+    }
+
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phone,
+    );
+
+    try {
+      final bool canLaunch = await canLaunchUrl(launchUri);
+      print('[ChatView][_makePhoneCall] canLaunchUrl 결과: $canLaunch'); // canLaunchUrl 결과 로그 추가
+
+      if (canLaunch) {
+        await launchUrl(launchUri);
+        print('[ChatView][_makePhoneCall] 전화 걸기 성공!');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('전화를 걸 수 없습니다.')),
+        );
+        print('[ChatView][_makePhoneCall] canLaunchUrl이 false를 반환했습니다.');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('전화 걸기 중 오류 발생: $e')),
+      );
+      print('[ChatView][_makePhoneCall] 전화 걸기 중 예외 발생: $e'); // 예외 로그 추가
     }
   }
 
@@ -118,6 +145,17 @@ class _ChatViewState extends ConsumerState<ChatView> {
       chatViewModelProvider(widget.roomId).notifier,
     );
 
+    final carpoolDetail = ref.watch(chatRoomDetailProvider(widget.roomId));
+
+    // CarpoolRoomDetail에서 운전자 이름 가져오기.
+    // String driverName = carpoolDetail?.room.driver.name ?? '운전자';
+    // 현재 인원 (운전자 포함)
+    // int currentMembers = (carpoolDetail?.members.length ?? 0) + (carpoolDetail != null ? 1 : 0);
+    int currentMembers = (carpoolDetail?.room.seatsTotal ?? 0) - (carpoolDetail?.room.seatsLeft ?? 0);
+    int maxMembers = carpoolDetail?.room.seatsTotal ?? 0;
+    // 운전자 전화번호
+    String driverPhoneNumber = carpoolDetail?.room.driver.phone ?? '';
+
     final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -136,12 +174,26 @@ class _ChatViewState extends ConsumerState<ChatView> {
           // title: Text("$userName's ${widget.roomId}번 카풀 단톡방"),
           // title: Text('${widget.name}님의 카풀 메시지'),
           title: Text('${widget.roomId}번 카풀 메세지'),
-          actions: const [
-            Icon(Icons.person),
-            SizedBox(width: 8),
-            Center(child: Text("2/3")), // 📍 TODO : 실제 인원 수로 대체
-            SizedBox(width: 12),
-            IconButton(icon: Icon(Icons.call), onPressed: null),  // 📍 TODO : 통화 아이콘 클릭시 통화 연결 또는 연락처 복사
+          actions: [
+            if (carpoolDetail != null)
+              Row(
+                children: [
+                  const Icon(Icons.person, color: Colors.black),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$currentMembers/$maxMembers', // 현재 인원 / 모집 정원
+                    style: const TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
+            IconButton(
+              icon: const Icon(Icons.call),
+              onPressed: driverPhoneNumber.isNotEmpty
+                  ? () => _makePhoneCall(driverPhoneNumber)
+                  : null, // 전화번호가 있을 때만 클릭 가능
+            ),
+            const SizedBox(width: 8), // 아이콘과 끝 여백
           ],
         ),
         body: Stack(
@@ -160,8 +212,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                       if (chatItem is ChatMessageItem) {
                         final isMine = chatItem.chat.senderId == currentUserId;
                         return _buildMessageBubble(
-                          chatItem.chat,
-                          chatItem.status,
+                          chatItem,
                           isMine,
                         );
                       } else if (chatItem is UnreadDividerItem) {
@@ -272,9 +323,11 @@ class _ChatViewState extends ConsumerState<ChatView> {
     });
   }
 
-  Widget _buildMessageBubble(Chat message, ChatStatus status, bool isMine) {
+  Widget _buildMessageBubble(ChatMessageItem chatItem, bool isMine) {
+    final message = chatItem.chat;
+    final status = chatItem.status;
+    final senderName = chatItem.senderName;
     final timeText = _formatTime(message.timestamp);
-    final senderName = isMine ? '' : '${message.senderId}';
 
     Widget timeWidget = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -285,7 +338,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
       crossAxisAlignment:
           isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        if (senderName.isNotEmpty)
+        if (!isMine && senderName.isNotEmpty)
           Padding(
             padding: EdgeInsets.only(
               top: 4,

@@ -99,3 +99,50 @@ class CarpoolRoom {
     );
   }
 }
+
+class CarpoolUserInfo {
+  final int userId;
+  final String name;
+  final String phone;
+
+  CarpoolUserInfo({
+    required this.userId,
+    required this.name,
+    required this.phone,
+  });
+
+  factory CarpoolUserInfo.fromJson(Map<String, dynamic> json) {
+    return CarpoolUserInfo(
+      userId: json['userId'] as int,
+      name: json['name'] as String,
+      phone: json['phone'] as String? ?? '',
+    );
+  }
+}
+
+class CarpoolRoomDetail {
+  final CarpoolRoom room;
+  final List<CarpoolUserInfo> members;
+
+  CarpoolRoomDetail({
+    required this.room,
+    required this.members,
+  });
+
+  factory CarpoolRoomDetail.fromJson(Map<String, dynamic> json) {
+
+    final Map<String, dynamic>? roomDataRaw = json['room'] as Map<String, dynamic>?;
+    final Map<String, dynamic> carpoolRoomDataForParsing = Map.from(roomDataRaw!);
+    final List<dynamic>? rawMembersList = carpoolRoomDataForParsing.remove('members') as List<dynamic>?; // 'members' 추출 후 맵에서 제거
+
+    return CarpoolRoomDetail(
+      room: CarpoolRoom.fromJson(carpoolRoomDataForParsing),
+      members: rawMembersList != null
+          ? rawMembersList
+              .whereType<Map<String, dynamic>>()
+              .map((e) => CarpoolUserInfo.fromJson(e))
+              .toList()
+          : [], // members 리스트 파싱
+    );
+  }
+}

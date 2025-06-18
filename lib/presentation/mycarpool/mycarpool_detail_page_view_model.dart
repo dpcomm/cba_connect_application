@@ -2,30 +2,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
 import 'package:cba_connect_application/core/custom_exception.dart';
-
 import '../main/pages/home/registration_view_model.dart';
 
 enum MyCarpoolDetailStatus { initial, loading, success, left, deleted, error }
 
 class MyCarpoolDetailState {
   final MyCarpoolDetailStatus status;
-  final CarpoolRoom? room;
+  final CarpoolRoomDetail? roomDetail;
   final String? message;
 
   const MyCarpoolDetailState({
     this.status = MyCarpoolDetailStatus.initial,
-    this.room,
+    this.roomDetail,
     this.message,
   });
 
   MyCarpoolDetailState copyWith({
     MyCarpoolDetailStatus? status,
-    CarpoolRoom? room,
+    CarpoolRoomDetail? roomDetail,
     String? message,
   }) {
     return MyCarpoolDetailState(
       status: status ?? this.status,
-      room: room ?? this.room,
+      roomDetail: roomDetail ?? this.roomDetail, 
       message: message ?? this.message,
     );
   }
@@ -36,6 +35,30 @@ class MyCarpoolDetailPageViewModel extends StateNotifier<MyCarpoolDetailState> {
 
   MyCarpoolDetailPageViewModel(this._repository)
       : super(const MyCarpoolDetailState());
+
+  /// 카풀 상세 정보 불러오기 (초기 로딩 시 사용)
+  Future<void> fetchCarpoolDetail(int id) async {
+    state = state.copyWith(status: MyCarpoolDetailStatus.loading);
+    try {
+      final fetchedDetail = await _repository.fetchCarpoolDetails(id);
+      state = state.copyWith(
+        status: MyCarpoolDetailStatus.success,
+        roomDetail: fetchedDetail,
+      );
+    } on NetworkException catch (e) {
+      state = state.copyWith(
+        status: MyCarpoolDetailStatus.error,
+        message: e.message,
+      );
+      print('카풀 상세 정보 로드 실패: ${e.message}'); // 에러 로깅
+    } catch (e) {
+      state = state.copyWith(
+        status: MyCarpoolDetailStatus.error,
+        message: '알 수 없는 에러 발생: $e',
+      );
+      print('알 수 없는 에러: $e');
+    }
+  }
 
   /// 내 카풀 방에서 나가기 (참여자 입장)
   Future<void> leaveCarpool(int userId, int roomId) async {
