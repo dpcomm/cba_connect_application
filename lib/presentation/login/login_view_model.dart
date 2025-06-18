@@ -56,6 +56,9 @@ class LoginViewModel extends StateNotifier<LoginState> {
         lifecycleManager.start();
       }
 
+      final notificationConfig = await SecureStorage.read(key: 'notification-config');
+      if (notificationConfig == null) { await SecureStorage.write(key: 'notification-config', value: 'on');}
+
       _fcmService.setToken(response.user.id);
 
       socketManager.setSocket(response.accessToken);

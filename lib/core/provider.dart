@@ -54,6 +54,5 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
 
 // LifecycleManager를 userId별로 관리 (family 사용)
 final lifecycleManagerProvider = Provider.family.autoDispose<LifecycleManager, int>((ref, userId) {
-  final repository = ref.read(fcmRepositoryProvider);
-  return LifecycleManager(userId, repository);
+  return LifecycleManager(userId);
 });

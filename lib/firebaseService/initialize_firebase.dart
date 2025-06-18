@@ -80,6 +80,9 @@ Future<void> initializeFirebaseAppSettings() async {
 @pragma('vm:entry-point')
 Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
   print("[FCM - Background] MESSAGE : ${message.messageId}");
+  final notificationConfig = await SecureStorage.read(key: 'notification-config');
+  if (notificationConfig == 'off') return;
+
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -211,6 +214,9 @@ Future<void> fbMsgForegroundHandler(
     RemoteMessage message,
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
   print('[FCM - Foreground] MESSAGE : ${message.data}');
+
+  final notificationConfig = await SecureStorage.read(key: 'notification-config');
+  if (notificationConfig == 'off') return;
 
   AndroidNotificationDetails androidDetails;
 
