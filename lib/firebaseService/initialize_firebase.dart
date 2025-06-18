@@ -10,6 +10,25 @@ import 'dart:io';
 import 'package:cba_connect_application/core/secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+
+//Android 8 (API 26) 이상부터는 채널설정이 필수.
+const androidChatNotificationChannel = AndroidNotificationChannel(
+  'chat_channel', // id
+  'Chat_Notifications', // name
+  description: '채팅 알림 채널.',
+  // description
+  importance: Importance.high,
+  playSound: false,
+);
+
+const androidCarpoolNotificationChannel = AndroidNotificationChannel(
+  'carpool_channel', 
+  'Carpool_Notifications',
+  description: '카풀 알림 채널',
+  importance: Importance.high,
+  playSound: false,  
+);
+
 Future<void> initializeFirebaseAppSettings() async {
 
   if (Firebase.apps.isEmpty) {
@@ -22,8 +41,7 @@ Future<void> initializeFirebaseAppSettings() async {
   FirebaseMessaging fbMsg = FirebaseMessaging.instance;
 
   // 플랫폼 확인후 권한요청 및 Flutter Local Notification Plugin 설정
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   AndroidNotificationChannel? androidNotificationChannel;
   if (Platform.isIOS) {
     //await reqIOSPermission(fbMsg);
@@ -31,27 +49,26 @@ Future<void> initializeFirebaseAppSettings() async {
     await FirebaseMessaging.instance.requestPermission();
 
 
-    //Android 8 (API 26) 이상부터는 채널설정이 필수.
-    androidNotificationChannel = const AndroidNotificationChannel(
-      'chat_channel', // id
-      'Chat_Notifications', // name
-      description: '채팅 알림 채널.',
-      // description
-      importance: Importance.high,
-      playSound: false,
-    );
+
 
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(androidNotificationChannel);
+        ?.createNotificationChannel(androidChatNotificationChannel);
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidCarpoolNotificationChannel);
+
+
   }
   //Background Handling 백그라운드 메세지 핸들링
   FirebaseMessaging.onBackgroundMessage(fbMsgBackgroundHandler);
   //Foreground Handling 포어그라운드 메세지 핸들링
   FirebaseMessaging.onMessage.listen((message) {
     fbMsgForegroundHandler(
-        message, flutterLocalNotificationsPlugin, androidNotificationChannel);
+        message, flutterLocalNotificationsPlugin);
   });
   //Message Click Event Implement
   await setupInteractedMessage(fbMsg);
@@ -79,6 +96,9 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
     await FirebaseMessaging.instance.requestPermission();
   }
 
+  final channelId = message.data['channelId'];
+
+  if (channelId == 'chat_channel') {
     //Android 8 (API 26) 이상부터는 채널설정이 필수.
     channel = const AndroidNotificationChannel(
       'chat_channel', // id
@@ -88,100 +108,201 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
       importance: Importance.high,
       playSound: false,
     );
-  print('[FCM - Background] MESSAGE : ${message.data}');
+    print('[FCM - Background] MESSAGE : ${message.data}');
 
-  flutterLocalNotificationsPlugin.show(
-      message.hashCode,
-      message.data['title'],
-      message.data['body'],
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel!.id,
-          channel.name,
-          groupKey: message.data['roomId'],
-          channelDescription: channel.description,
-          icon: '@mipmap/ic_launcher',
-          playSound: false,
-        ),
-        // iOS: const DarwinNotificationDetails(
-        //   badgeNumber: 1,
-        //   subtitle: 'the subtitle',
-        //   sound: 'slow_spring_board.aiff',
-        // ),
-      ));
+    flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            groupKey: message.data['roomId'],
+            channelDescription: channel.description,
+            importance: channel.importance,
+            playSound: false,
+          ),
+          // iOS: const DarwinNotificationDetails(
+          //   badgeNumber: 1,
+          //   subtitle: 'the subtitle',
+          //   sound: 'slow_spring_board.aiff',
+          // ),
+        ));
 
-  flutterLocalNotificationsPlugin.show(
-      int.parse(message.data['roomId']),
-      message.data['title'],
-      message.data['body'],
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel!.id,
-          channel.name,
-          groupKey: message.data['roomId'],
-          setAsGroupSummary: true,
-          channelDescription: channel.description,
-          icon: '@mipmap/ic_launcher',
-          playSound: false,
-        ),
-        // iOS: const DarwinNotificationDetails(
-        //   badgeNumber: 1,
-        //   subtitle: 'the subtitle',
-        //   sound: 'slow_spring_board.aiff',
-        // ),
-      ));        
+    flutterLocalNotificationsPlugin.show(
+        int.parse(message.data['roomId']),
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            groupKey: message.data['roomId'],
+            setAsGroupSummary: true,
+            channelDescription: channel.description,
+            importance: channel.importance,
+            playSound: false,
+          ),
+          // iOS: const DarwinNotificationDetails(
+          //   badgeNumber: 1,
+          //   subtitle: 'the subtitle',
+          //   sound: 'slow_spring_board.aiff',
+          // ),
+        ));        
+  } else if (channelId == 'carpool_channel') {
+    
+    channel = AndroidNotificationChannel(
+      'carpool_channel', 
+      'Carpool_Notifications',
+      description: '카풀 알림 채널',
+      importance: Importance.high,
+      playSound: false,  
+    );
 
+    flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            channelDescription: channel.description,
+            playSound: false,
+          ),
+          // iOS: const DarwinNotificationDetails(
+          //   badgeNumber: 1,
+          //   subtitle: 'the subtitle',
+          //   sound: 'slow_spring_board.aiff',
+          // ),
+        ));
+  } else {
+    channel = AndroidNotificationChannel(
+      'default_channel', 
+      'Default_Notifications',
+      description: '기본 알림 채널',
+      importance: Importance.defaultImportance,
+      playSound: false,  
+    );
+
+    flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            channelDescription: channel.description,
+            playSound: false,
+          ),
+          // iOS: const DarwinNotificationDetails(
+          //   badgeNumber: 1,
+          //   subtitle: 'the subtitle',
+          //   sound: 'slow_spring_board.aiff',
+          // ),
+        ));
+  }
 }
 
 /// Firebase Foreground Messaging 핸들러
 Future<void> fbMsgForegroundHandler(
     RemoteMessage message,
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
-    AndroidNotificationChannel? channel) async {
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
   print('[FCM - Foreground] MESSAGE : ${message.data}');
 
+  AndroidNotificationDetails androidDetails;
 
-  flutterLocalNotificationsPlugin.show(
-      message.hashCode,
+  final channelId = message.data['channelId'];
+
+  if (channelId == 'chat_channel') {
+    androidDetails = AndroidNotificationDetails(
+      androidChatNotificationChannel.id,
+      androidChatNotificationChannel.name,
+      groupKey: message.data['roomId'],
+      channelDescription: androidChatNotificationChannel.description,
+      importance: androidChatNotificationChannel.importance,
+      playSound: false,
+    );
+  } else if (channelId == 'carpool_channel') {
+    androidDetails = AndroidNotificationDetails(
+      androidCarpoolNotificationChannel.id,
+      androidCarpoolNotificationChannel.name,
+      channelDescription: androidCarpoolNotificationChannel.description,
+      importance: androidCarpoolNotificationChannel.importance,
+      playSound: false,
+    );    
+  } else {
+    androidDetails = AndroidNotificationDetails(
+      'default_channel',
+      'default notification',
+      channelDescription: '기본 알림 채널',
+      importance: Importance.defaultImportance,
+      playSound: false,
+    );        
+  }
+
+  if (channelId == 'chat_channel') {
+    flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            androidChatNotificationChannel.id,
+            androidChatNotificationChannel.name,
+            groupKey: message.data['roomId'],
+            channelDescription: androidChatNotificationChannel.description,
+            icon: '@mipmap/ic_launcher',
+            playSound: false,
+          ),
+          // iOS: const DarwinNotificationDetails(
+          //   badgeNumber: 1,
+          //   subtitle: 'the subtitle',
+          //   sound: 'slow_spring_board.aiff',
+          // ),
+        ));
+
+    flutterLocalNotificationsPlugin.show(
+        int.parse(message.data['roomId']),
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            androidChatNotificationChannel.id,
+            androidChatNotificationChannel.name,
+            groupKey: message.data['roomId'],
+            setAsGroupSummary: true,
+            channelDescription: androidChatNotificationChannel.description,
+            icon: '@mipmap/ic_launcher',
+            playSound: false,
+          ),
+          // iOS: const DarwinNotificationDetails(
+          //   badgeNumber: 1,
+          //   subtitle: 'the subtitle',
+          //   sound: 'slow_spring_board.aiff',
+          // ),
+        ));        
+  } else {
+    flutterLocalNotificationsPlugin.show(
+      message.hashCode, 
       message.data['title'],
       message.data['body'],
       NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel!.id,
-          channel.name,
-          groupKey: message.data['roomId'],
-          channelDescription: channel.description,
-          icon: '@mipmap/ic_launcher',
-          playSound: false,
-        ),
+        android: androidDetails,
         // iOS: const DarwinNotificationDetails(
         //   badgeNumber: 1,
         //   subtitle: 'the subtitle',
         //   sound: 'slow_spring_board.aiff',
-        // ),
-      ));
+        // ),        
+      ),
+    );
+  }
 
-  flutterLocalNotificationsPlugin.show(
-      int.parse(message.data['roomId']),
-      message.data['title'],
-      message.data['body'],
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel!.id,
-          channel.name,
-          groupKey: message.data['roomId'],
-          setAsGroupSummary: true,
-          channelDescription: channel.description,
-          icon: '@mipmap/ic_launcher',
-          playSound: false,
-        ),
-        // iOS: const DarwinNotificationDetails(
-        //   badgeNumber: 1,
-        //   subtitle: 'the subtitle',
-        //   sound: 'slow_spring_board.aiff',
-        // ),
-      ));        
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // if (message.notification != null) {
   //   print('Message also contained a notification: ${message.notification}');
   //   print('collapse key: ${message.collapseKey}');
