@@ -1,4 +1,5 @@
 import 'package:cba_connect_application/core/provider.dart';
+import 'package:cba_connect_application/dto/refresh_fcm_token_dto.dart';
 import 'package:cba_connect_application/dto/regist_fcm_dto.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:cba_connect_application/repositories/fcm_repository.dart';
@@ -38,13 +39,21 @@ class FcmService{
       }  
     }
 
-    var fcmToken = await FirebaseMessaging.instance.getToken();
-    print("--------------------------fcmToken---------------------------------");
-    print(fcmToken);
-    print("--------------------------fcmToken---------------------------------");
-
-    fbMsg.onTokenRefresh.listen((nToken) {
-      //TODO : 서버에 해당 토큰을 저장하는 로직 구현
+    fbMsg.onTokenRefresh.listen((nToken) async {
+      if(tokenExists == null) {
+        await SecureStorage.write(key: 'firebase-token', value: nToken);        
+        await _repo.registToken(RegistFcmDto(
+          userId: userId,
+          token: nToken,
+        ));
+      } else {
+        await SecureStorage.write(key: 'firebase-token', value: nToken);        
+        await _repo.refreshToken(RefreshFcmTokenDto(
+          userId: userId, 
+          oldToken: tokenExists, 
+          newToken: nToken
+          ));
+      }
     });
     
   }

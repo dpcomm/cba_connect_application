@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/core/lifecycle_manager.dart';
 import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
 import 'package:cba_connect_application/repositories/chat_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,4 +49,10 @@ final fcmRepositoryProvider = Provider<FcmRepository>((ref) {
 final fcmServiceProvider = Provider<FcmService>((ref) {
   final repository = ref.read(fcmRepositoryProvider);
   return FcmService(repository);
+});
+
+
+// LifecycleManager를 userId별로 관리 (family 사용)
+final lifecycleManagerProvider = Provider.family.autoDispose<LifecycleManager, int>((ref, userId) {
+  return LifecycleManager(userId);
 });
