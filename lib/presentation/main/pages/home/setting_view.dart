@@ -189,6 +189,42 @@ class _SettingViewState extends ConsumerState<SettingView> {
               hintText: '차종/색깔/번호',
             ),
 
+            // 알림 설정 토글 버튼
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'PUSH 알림 설정',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: IconButton(
+                    onPressed: () => settingViewModel.toggleFcmEnabled(),
+                    icon: Icon(
+                      settingState.fcmEnabled
+                          ? Icons.notifications
+                          : Icons.notifications_off,
+                      color: settingState.fcmEnabled ? secondaryColor : Colors.grey,
+                      size: 28,
+                    ),
+                    tooltip: settingState.fcmEnabled ? '알림 끄기' : '알림 켜기',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Divider(
+              color: Colors.grey[400],
+              thickness: 1.0,
+              height: 1,
+              indent: 0,
+              endIndent: 0,
+            ),
             const SizedBox(height: 40),
 
             // 로그아웃 버튼
