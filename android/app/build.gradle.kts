@@ -22,7 +22,7 @@ android {
             versionNameSuffix = "-dev"
             resValue("string", "app_name", "CBA Connect (Dev)")
         }
-        create("product") {
+        create("prod") {
             dimension = "app"
             resValue("string", "app_name", "CBA Connect")
         }

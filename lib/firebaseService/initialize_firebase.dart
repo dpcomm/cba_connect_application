@@ -35,14 +35,16 @@ const androidCarpoolNotificationChannel = AndroidNotificationChannel(
 );
 
 Future<FirebaseOptions> _initializeFirebaseOption() async {
-  PackageInfo package = await PackageInfo.fromPlatform();
-  const String name = "com.cba.cba_connect_application";
-  return switch (package.packageName) {
-    name => prod.DefaultFirebaseOptions.currentPlatform,
-    "$name.prod" => prod.DefaultFirebaseOptions.currentPlatform,
-    "$name.dev" => dev.DefaultFirebaseOptions.currentPlatform,
-    _ => throw UnimplementedError(),
-  };
+  final pkg = (await PackageInfo.fromPlatform()).packageName;
+
+  if (pkg.endsWith('.dev')) {
+    return dev.DefaultFirebaseOptions.currentPlatform;
+  }
+  if (pkg.endsWith('.prod') || pkg == 'com.cba.cba_connect_application' || pkg == 'com.cba.cbaConnectApplication') {
+    return prod.DefaultFirebaseOptions.currentPlatform;
+  }
+
+  throw UnimplementedError('Unknown package name: $pkg');
 }
 
 Future<void> initializeFirebaseAppSettings() async {
