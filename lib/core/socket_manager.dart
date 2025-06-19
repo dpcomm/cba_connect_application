@@ -13,7 +13,7 @@ class SocketManager {
   void setSocket(String token) {
     try {
       socket = IO.io(
-        AppConfig.apiBaseUrl, <String, dynamic>{
+        Config.instance.baseUrl, <String, dynamic>{
           'transports': ['websocket'],
           'autoConnect': true,
           'extraHeaders': {

@@ -1,21 +1,26 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
+class Config {
+  final String baseUrl;
+  final String token;
 
-class AppConfig {
-  /// 로컬 서버 (플랫폼별 호스트)
-  static String get apiLocalUrl {
-    if (kReleaseMode) {
-      return apiProductionUrl;
+  Config._dev()
+      : baseUrl = 'http://localhost:3000',
+        token = 'dev-token';
+
+  Config._product()
+      : baseUrl = 'http://121.143.179.182:8081',
+        token = 'prod-token';
+
+  static late final Config instance;
+
+  factory Config(String? flavor) {
+    if (flavor == 'dev') {
+      instance = Config._dev();
+    } else if (flavor == 'product') {
+      instance = Config._product();
+    } else {
+      throw Exception('Unknown flavor: $flavor');
+      // instance = Config._dev();
     }
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000';
-    }
-    return 'http://localhost:3000';
+    return instance;
   }
-
-  /// 프로덕션 서버
-  static const apiProductionUrl = 'http://121.143.179.182:8081';
-
-  /// 실제로 쓰일 베이스 URL
-  static String get apiBaseUrl => apiLocalUrl;
 }

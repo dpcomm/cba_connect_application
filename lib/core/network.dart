@@ -7,7 +7,7 @@ class Network {
 
   static Dio _createDio() {
     final dio = Dio(BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl,
+      baseUrl: Config.instance.baseUrl,
       connectTimeout: const Duration(milliseconds: 15000),
       receiveTimeout: const Duration(milliseconds: 15000),
     ));
