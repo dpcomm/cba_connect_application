@@ -138,14 +138,22 @@ class _SettingViewState extends ConsumerState<SettingView> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: Text('설정',
-            style: const TextStyle(
-                fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black
-                )
+        titleSpacing: 16, // 좌측 여백
+        title: Row(
+          mainAxisSize: MainAxisSize.min, // Row의 크기를 자식 위젯에 맞게 최소화
+          children: [
+            Icon(Icons.settings),
+            SizedBox(width: 8), // 아이콘과 텍스트 사이 간격
+            Text(
+              '설정',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
-        leading: null,
-        // leading: BackButton(),
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
