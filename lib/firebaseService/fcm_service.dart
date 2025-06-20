@@ -5,7 +5,7 @@ import 'package:cba_connect_application/presentation/login/login_view_model.dart
 import 'package:cba_connect_application/repositories/fcm_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cba_connect_application/firebase_options.dart';
+import 'package:cba_connect_application/config/firebase_options_dev.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:io';

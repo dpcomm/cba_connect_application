@@ -3,12 +3,17 @@ import 'package:cba_connect_application/presentation/login/login_view_model.dart
 import 'package:cba_connect_application/repositories/fcm_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cba_connect_application/firebase_options.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:io';
 import 'package:cba_connect_application/core/secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+
+import '../config/firebase_options_prod.dart' as prod;
+import '../config/firebase_options_dev.dart' as dev;
+
 
 
 //Android 8 (API 26) 이상부터는 채널설정이 필수.
@@ -29,11 +34,25 @@ const androidCarpoolNotificationChannel = AndroidNotificationChannel(
   playSound: false,  
 );
 
+Future<FirebaseOptions> _initializeFirebaseOption() async {
+  final pkg = (await PackageInfo.fromPlatform()).packageName;
+
+  if (pkg.endsWith('.dev')) {
+    return dev.DefaultFirebaseOptions.currentPlatform;
+  }
+  if (pkg.endsWith('.prod') || pkg == 'com.cba.cba_connect_application' || pkg == 'com.cba.cbaConnectApplication') {
+    return prod.DefaultFirebaseOptions.currentPlatform;
+  }
+
+  throw UnimplementedError('Unknown package name: $pkg');
+}
+
 Future<void> initializeFirebaseAppSettings() async {
 
   if (Firebase.apps.isEmpty) {
+    FirebaseOptions currentPlatform = await _initializeFirebaseOption();
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: currentPlatform,
     );
   }
 
@@ -88,7 +107,7 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
   
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: await _initializeFirebaseOption(),
     );
   }
 
