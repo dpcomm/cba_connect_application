@@ -40,7 +40,7 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
+    Future.microtask(() async {
       final settingViewModel = ref.read(settingViewModelProvider.notifier);
       final defaultCarInfo = settingViewModel.carInfoController.text;
       if (defaultCarInfo.isNotEmpty) {
@@ -353,6 +353,10 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
+
+                          final settingViewModel = ref.read(settingViewModelProvider.notifier);
+                          await settingViewModel.saveCarInfo(_carInfoCtrl.text, context, showSnackBar: false);
+
                           if (!_formKey.currentState!.validate()) return;
                           String message;
 

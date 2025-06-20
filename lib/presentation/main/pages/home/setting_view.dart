@@ -14,6 +14,11 @@ class SettingView extends ConsumerStatefulWidget{
 class _SettingViewState extends ConsumerState<SettingView> {
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     
     final settingViewModel = ref.watch(settingViewModelProvider.notifier);
