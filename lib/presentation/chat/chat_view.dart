@@ -11,10 +11,7 @@ import 'package:url_launcher/url_launcher.dart'; // 전화 걸기 기능 추가
 
 class ChatView extends ConsumerStatefulWidget {
   final int roomId;
-  // final String name;
-  const ChatView({super.key, required this.roomId, 
-  // required this.name
-  });
+  const ChatView({super.key, required this.roomId});
 
   @override
   ConsumerState<ChatView> createState() => _ChatViewState();
@@ -134,7 +131,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Widget build(BuildContext context) {
     final loginState = ref.watch(loginViewModelProvider);
     final currentUserId = loginState.user?.id;
-    final userName = loginState.user?.name ?? "알 수 없음";
 
     if (currentUserId == null) {
       return const Center(child: Text("로그인 정보 없음"));
@@ -146,6 +142,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
 
     final carpoolDetail = ref.watch(chatRoomDetailProvider(widget.roomId));
+    final int? driverId = chatViewModel.driverId;
 
     // CarpoolRoomDetail에서 운전자 이름 가져오기.
     String driverName = carpoolDetail?.room.driver.name ?? '운전자';
@@ -218,6 +215,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
                         return _buildMessageBubble(
                           chatItem,
                           isMine,
+                          currentUserId,
+                          driverId,
                         );
                       } else if (chatItem is UnreadDividerItem) {
                         return Container(
@@ -327,11 +326,13 @@ class _ChatViewState extends ConsumerState<ChatView> {
     });
   }
 
-  Widget _buildMessageBubble(ChatMessageItem chatItem, bool isMine) {
+  Widget _buildMessageBubble(ChatMessageItem chatItem, bool isMine, int? currentUserId, int? driverId) {
     final message = chatItem.chat;
     final status = chatItem.status;
     final senderName = chatItem.senderName;
     final timeText = _formatTime(message.timestamp);
+    final bool isDriver = message.senderId == driverId;
+    final bool showSenderInfo = !isMine;
 
     Widget timeWidget = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -342,7 +343,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
       crossAxisAlignment:
           isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        if (!isMine && senderName.isNotEmpty)
+        if (showSenderInfo && senderName.isNotEmpty)
           Padding(
             padding: EdgeInsets.only(
               top: 4,
@@ -353,11 +354,14 @@ class _ChatViewState extends ConsumerState<ChatView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.person, size: 16, color: text800Color),
-                SizedBox(width: 4),
+                if (isDriver)
+                  const Icon(Icons.drive_eta, size: 20, color: secondaryColor)
+                else
+                  const Icon(Icons.person, size: 20, color: text800Color),
+                const SizedBox(width: 4),
                 Text(
                   senderName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     color: text800Color,
                     fontWeight: FontWeight.bold,
@@ -368,13 +372,20 @@ class _ChatViewState extends ConsumerState<ChatView> {
           ),
         Align(
           alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children:
-                isMine
-                    ? [timeWidget, _messageContainer(message.message, isMine)]
-                    : [_messageContainer(message.message, isMine), timeWidget],
+          child: Padding( 
+            padding: EdgeInsets.only(
+              bottom: isMine ? 0.0 : 1.0,
+              // top: 4.0 // 위쪽 간격
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (isMine) timeWidget,
+                _messageContainer(message.message, isMine),
+                if (!isMine) timeWidget,
+              ],
+            ),
           ),
         ),
         if (status == ChatStatus.loading)
@@ -382,7 +393,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
             alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
             child: Text(
               '전송 중...',
-              style: TextStyle(fontSize: 10, color: Colors.grey),
+              style: TextStyle(fontSize: 10, color: text700Color),
             ),
           ),
         if (status == ChatStatus.failed)
@@ -399,7 +410,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
 
   Widget _messageContainer(String text, bool isMine) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isMine ? secondaryColor : Colors.grey.shade200,

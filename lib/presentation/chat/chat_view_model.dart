@@ -46,6 +46,10 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
   final _initialLoadCompleter = Completer<void>();
   Future<void> get initialLoadDone => _initialLoadCompleter.future;
 
+  // CarpoolRoomDetail을 직접 참조할 수 있도록 추가 (Provider를 통해 Watch)
+  CarpoolRoomDetail? _currentRoomDetail;
+  int? get driverId => _currentRoomDetail?.room.driver.id;
+
   ChatViewModel({
     required this.roomId,
     required ChatRepository repository,
@@ -81,6 +85,9 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
     */
 
     _loadMembersMap().then((_) {
+
+      _currentRoomDetail = ref.read(chatRoomDetailProvider(roomId));
+
       _init().then((_) {
         if (!_initialLoadCompleter.isCompleted) {
           _initialLoadCompleter.complete();
@@ -116,7 +123,6 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
     try {
       final roomDetail = await _carpoolRepository.fetchCarpoolDetails(roomId);
       ref.read(chatRoomDetailProvider(roomId).notifier).state = roomDetail;
-      
       _membersMap[roomDetail.room.driver.id] = roomDetail.room.driver.name;
       for (var member in roomDetail.members) {
         _membersMap[member.userId] = member.name;
