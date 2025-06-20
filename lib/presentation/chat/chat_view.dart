@@ -148,13 +148,18 @@ class _ChatViewState extends ConsumerState<ChatView> {
     final carpoolDetail = ref.watch(chatRoomDetailProvider(widget.roomId));
 
     // CarpoolRoomDetail에서 운전자 이름 가져오기.
-    // String driverName = carpoolDetail?.room.driver.name ?? '운전자';
+    String driverName = carpoolDetail?.room.driver.name ?? '운전자';
     // 현재 인원 (운전자 포함)
-    // int currentMembers = (carpoolDetail?.members.length ?? 0) + (carpoolDetail != null ? 1 : 0);
     int currentMembers = (carpoolDetail?.room.seatsTotal ?? 0) - (carpoolDetail?.room.seatsLeft ?? 0);
     int maxMembers = carpoolDetail?.room.seatsTotal ?? 0;
     // 운전자 전화번호
     String driverPhoneNumber = carpoolDetail?.room.driver.phone ?? '';
+
+    // 카풀 시간
+    final dt = carpoolDetail?.room.departureTime;
+    // final formatter = DateFormat('M/d a h:m');
+    final formatter = DateFormat('d일 h:m');
+    final formatted = dt == null ? '' : formatter.format(dt);
 
     final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
@@ -171,9 +176,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          // title: Text("$userName's ${widget.roomId}번 카풀 단톡방"),
-          // title: Text('${widget.name}님의 카풀 메시지'),
-          title: Text('${widget.roomId}번 카풀 메세지'),
+          // title: Text('$driverName님 카풀 | $formatted'), // 가로 길이 확인 필요
+          title: Text('$driverName님 카풀 채팅방'),
           actions: [
             if (carpoolDetail != null)
               Row(
