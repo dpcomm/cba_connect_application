@@ -105,7 +105,7 @@ class CarpoolDataSourceImpl implements CarpoolDataSource {
   Future<List<CarpoolRoom>> fetchMyCarpools(int userId) async {
     try {
       final resp = await _dio.get('/api/carpool/my/$userId');
-      print('Response data: ${resp.data}');
+      // print('Response data: ${resp.data}');
 
       final data = resp.data as Map<String, dynamic>;
       final roomsData = data['rooms'] ?? data['room'] ?? [];

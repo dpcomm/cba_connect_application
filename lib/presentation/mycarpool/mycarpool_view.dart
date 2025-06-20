@@ -108,7 +108,8 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
         scrolledUnderElevation: 0,          
         centerTitle: false,
         iconTheme: const IconThemeData(color: Colors.black),
-        leading: const BackButton(),
+        leading: null,
+        // leading: const BackButton(),
         title: const Text(
           '마이 카풀',
           style: TextStyle(

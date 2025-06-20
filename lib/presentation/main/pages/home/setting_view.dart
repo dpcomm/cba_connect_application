@@ -14,6 +14,11 @@ class SettingView extends ConsumerStatefulWidget{
 class _SettingViewState extends ConsumerState<SettingView> {
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     
     final settingViewModel = ref.watch(settingViewModelProvider.notifier);
@@ -139,7 +144,8 @@ class _SettingViewState extends ConsumerState<SettingView> {
                 fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black
                 )
               ),
-        leading: BackButton(),
+        leading: null,
+        // leading: BackButton(),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),

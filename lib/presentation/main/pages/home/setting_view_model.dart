@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ class SettingState {
   final bool isEditingPhone;
   final bool isEditingCarInfo;
   final bool fcmEnabled;
+  final String currentCarInfo;
 
   const SettingState({
     this.status = SettingStatus.initial,
@@ -27,6 +29,7 @@ class SettingState {
     this.isEditingPhone = false,
     this.isEditingCarInfo = false,
     this.fcmEnabled = true, // 기본값 : 수신 상태
+    this.currentCarInfo = '',
   });
 
   // 상태를 복사하여 새로운 상태를 생성하는 헬퍼 메서드
@@ -37,6 +40,7 @@ class SettingState {
     bool? isEditingPhone,
     bool? isEditingCarInfo,
     bool? fcmEnabled,
+    String? currentCarInfo,
   }) {
     return SettingState(
       status: status ?? this.status,
@@ -45,6 +49,7 @@ class SettingState {
       isEditingPhone: isEditingPhone ?? this.isEditingPhone,
       isEditingCarInfo: isEditingCarInfo ?? this.isEditingCarInfo,
       fcmEnabled: fcmEnabled ?? this.fcmEnabled,
+      currentCarInfo: currentCarInfo ?? this.currentCarInfo,
     );
   }
 }
@@ -85,8 +90,10 @@ class SettingViewModel extends StateNotifier<SettingState> {
     final String? carInfoString = _prefs.getString('car_info_${loginState.user?.id}');
     if (carInfoString != null && carInfoString.isNotEmpty) {
       carInfoController.text = carInfoString;
+      state = state.copyWith(currentCarInfo: carInfoString);
     } else {
       carInfoController.text = '';
+      state = state.copyWith(currentCarInfo: '');
     }
 
     // 4. FCM 설정 상태 불러오기 + 상태에 반영
@@ -114,7 +121,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
   /// 차 정보를 수정 모드로 토글하고, 수정 완료 시 차 정보 저장
   void toggleCarInfoEditMode(BuildContext context) {
     if (state.isEditingCarInfo) {
-      _saveCarInfo(carInfoController.text, context);
+      saveCarInfo(carInfoController.text, context);
     }
     state = state.copyWith(isEditingCarInfo: !state.isEditingCarInfo, status: SettingStatus.initial);
   }
@@ -148,7 +155,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
         await _userRepository.updateUserName(dto);
         loginViewModelNotifier.updateUserNameInState(dto.name); 
 
-        state = state.copyWith(status: SettingStatus.success, message: '이름이 ${dto.name}(으)로 수정되었습니다.');
+        state = state.copyWith(status: SettingStatus.success, message: '이름이 "${dto.name}"(으)로 수정되었습니다.');
         _showSnackBar(context, state.message!);
       } on NetworkException catch (e) {
         state = state.copyWith(status: SettingStatus.error, message: '네트워크 오류: ${e.message}');
@@ -184,7 +191,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
       await _userRepository.updateUserPhone(dto);
       loginViewModelNotifier.updateUserPhoneInState(dto.phone); 
 
-      state = state.copyWith(status: SettingStatus.success, message: '전화번호가 ${dto.phone}(으)로 수정되었습니다.');
+      state = state.copyWith(status: SettingStatus.success, message: '전화번호가 "${dto.phone}"(으)로 수정되었습니다.');
       _showSnackBar(context, state.message!);
     } on NetworkException catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: '네트워크 오류: ${e.message}');
@@ -200,7 +207,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
   }
 
   /// 차 정보를 저장하는 로직 (SharedPreferences에 String으로 저장)
-  Future<void> _saveCarInfo(String carInfoString, BuildContext context) async {
+  Future<void> saveCarInfo(String carInfoString, BuildContext context, {bool showSnackBar = true}) async {
     final loginState = _ref.read(loginViewModelProvider);
     print('차 정보 저장: $carInfoString');
 
@@ -208,23 +215,39 @@ class SettingViewModel extends StateNotifier<SettingState> {
 
     try {
       await _prefs.setString('car_info_${loginState.user?.id}', carInfoString);
-      state = state.copyWith(status: SettingStatus.success, message: '차 정보가 ${carInfoString}(으)로 수정되었습니다.');
-      _showSnackBar(context, state.message!);
+      state = state.copyWith(status: SettingStatus.success, message: '차 정보가 "${carInfoString}"(으)로 수정되었습니다.', currentCarInfo: carInfoString,);
+      carInfoController.text = carInfoString;
+
+      if (showSnackBar) {
+        _showSnackBar(context, state.message!);
+      }
     } on CustomException catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: e.message);
-      _showSnackBar(context, state.message!);
+      if (showSnackBar) {
+        _showSnackBar(context, state.message!);
+      }
     } catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: '차 정보 저장에 실패했습니다: ${e.toString()}');
       print('차 정보 저장 중 오류 발생: $e');
-      _showSnackBar(context, state.message!);
+      if (showSnackBar) {
+        _showSnackBar(context, state.message!);
+      }
     }
   }
 
   // 스낵바 표시 헬퍼 함수
   void _showSnackBar(BuildContext context, String message) {
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    SnackBar(
+      backgroundColor: secondaryColor,
+      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0), // <--- 이 부분
+      content: Text(
+        message,
+        style: const TextStyle(fontSize: 16, color: Colors.white), // <--- 이 부분
+      ),
+    ),
+  );
   }
 
   @override
