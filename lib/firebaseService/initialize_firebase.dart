@@ -62,6 +62,10 @@ Future<void> initializeFirebaseAppSettings() async {
   // 플랫폼 확인후 권한요청 및 Flutter Local Notification Plugin 설정
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   AndroidNotificationChannel? androidNotificationChannel;
+
+  await SecureStorage.write(key: 'notification-config-now', value: 'on');
+
+
   if (Platform.isIOS) {    
 
     await FirebaseMessaging.instance.requestPermission(
