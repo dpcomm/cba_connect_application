@@ -64,7 +64,7 @@ Future<void> initializeFirebaseAppSettings() async {
   AndroidNotificationChannel? androidNotificationChannel;
   if (Platform.isIOS) {    
 
-    await FirebaseMessaging.instance. requestPermission(
+    await FirebaseMessaging.instance.requestPermission(
       alert: true,
       announcement: false,
       badge: true,
@@ -91,6 +91,12 @@ Future<void> initializeFirebaseAppSettings() async {
     FirebaseMessaging.onMessage.listen((message) {
       fbMsgIosForegroundHandler(message, flutterLocalNotificationsPlugin);
     });
+
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: false,
+    );
 
 
   } else if (Platform.isAndroid) {
@@ -415,9 +421,24 @@ Future<void> fbMsgIosForegroundHandler(
     RemoteMessage message,
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
   
-  
-
-
+  print('[FCM - Foreground] MESSAGE : ${message.notification}');
+  if (message.notification != null) {
+    flutterLocalNotificationsPlugin.show(
+      message.data['room_id'],
+      message.notification?.title,
+      message.notification?.body,
+      NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          threadIdentifier: message.data['room_id'],
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: false,
+          presentBanner: true,
+          presentList: true,
+        ),
+      ),  
+    );
+  }
 
 }
 
