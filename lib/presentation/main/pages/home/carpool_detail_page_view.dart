@@ -183,34 +183,35 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                         : null,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(150, 48),
-                      backgroundColor: const Color(0xFFB36BFF),
-
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 2,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatView(
-                            roomId: room.id,
-                          ),
+                if (applied) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(150, 48),
+                        backgroundColor: const Color(0xFFB36BFF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                      );
-                    },
-                    child: const Text(
-                      '메시지',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        elevation: 2,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatView(
+                              roomId: room.id,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        '메시지',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ],
