@@ -3,7 +3,7 @@ class Config {
   final String token;
 
   Config._dev()
-      : baseUrl = 'http://192.168.0.233:3000',
+      : baseUrl = 'http://192.168.0.152:3000',
         token = 'dev-token';
 
   Config._prod()

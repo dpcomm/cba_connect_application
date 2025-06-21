@@ -20,23 +20,18 @@ class CarpoolDetailPageView extends ConsumerStatefulWidget {
 
 class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
   final GlobalKey<KakaoMapNativeViewState> _mapKey = GlobalKey();
-  late bool _isApplied;
+  late bool _isAppliedLocal;
 
   @override
   @override
   void initState() {
     super.initState();
-    _isApplied = false;
+    _isAppliedLocal = false;
     // 위젯 트리 빌드 완료 후에 fetch 호출
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(CarpoolDetailPageProvider.notifier).fetchById(widget.id);
     });
   }
-
-  void _applyCarpool() {
-    setState(() => _isApplied = true);
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(CarpoolDetailPageProvider);
@@ -82,6 +77,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
   }
 
   Widget _buildDetailUI(CardViewState state, CarpoolDetailPageViewModel viewModel, int userId) {
+
     final room = state.room!;
     final mapLat = widget.tabIndex == 0 ? room.originLat : room.destLat;
     final mapLng = widget.tabIndex == 0 ? room.originLng : room.destLng;
@@ -89,9 +85,12 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
     final driver = room.driver;
     final current = room.seatsTotal - room.seatsLeft;
     final timeText = DateFormat('a h시 mm분', 'ko').format(room.departureTime);
+
     final isOwner = userId == room.driverId;
     final isFull = current >= room.seatsTotal;
-    final applied = state.status == CardViewStatus.applied;
+
+    final isAppliedByData = state.members.any((m) => m.userId == userId);
+    final applied = isAppliedByData || _isAppliedLocal;
     final canJoin = !isOwner && !applied && !isFull;
 
     return SingleChildScrollView(
@@ -162,7 +161,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
             ),
             const Divider(),
             _buildInfoRow(
-              Image.asset('assets/images/requests_icon.png', width: 24, height: 24),
+              Image.asset('assets/images/request_icon.png', width: 24, height: 24),
               '요청사항: ${room.note ?? ''}',
             ),
 
@@ -175,7 +174,12 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                   child: ButtonView(
                     isApplied: applied,
                     onPressed: canJoin
-                        ? () => viewModel.joinCarpool(userId, room.id)
+                        ? () {
+                            setState(() {
+                              _isAppliedLocal = true;
+                              viewModel.joinCarpool(userId, room.id);
+                            });
+                          }
                         : null,
                   ),
                 ),

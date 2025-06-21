@@ -1,0 +1,3 @@
+APP_FLAVOR           = dev
+APP_NAME             = CBA Connect (Dev)
+DEVELOPMENT_LANGUAGE = ko

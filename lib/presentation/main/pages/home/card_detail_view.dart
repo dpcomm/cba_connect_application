@@ -50,7 +50,7 @@ class CardDetailView extends StatelessWidget {
                 const Text('📍', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 4),
                 Text(
-                  _truncateCharacters(region, 10),
+                  _truncateCharacters(region, 7),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(width: 8),

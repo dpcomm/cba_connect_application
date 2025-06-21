@@ -9,11 +9,13 @@ enum CardViewStatus { initial, loading, success, error, applied }
 class CardViewState {
   final CardViewStatus status;
   final CarpoolRoom? room;
+  final List<CarpoolUserInfo> members;
   final String? message;
 
   const CardViewState({
     this.status = CardViewStatus.initial,
     this.room,
+    this.members = const [],
     this.message,
   });
 }
@@ -26,10 +28,11 @@ class CarpoolDetailPageViewModel extends StateNotifier<CardViewState> {
   Future<void> fetchById(int id) async {
     state = const CardViewState(status: CardViewStatus.loading);
     try {
-      final room = await _repo.getCarpoolById(id);
+      final room = await _repo.fetchCarpoolDetails(id);
       state = CardViewState(
         status: CardViewStatus.success,
-        room: room,
+        room: room.room,
+        members: room.members
       );
     } on NetworkException catch (e) {
       state = CardViewState(
