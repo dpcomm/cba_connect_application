@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/core/color.dart';
+import 'package:cba_connect_application/core/color.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login_view_model.dart';
 
 class LoginView extends ConsumerStatefulWidget {
@@ -17,12 +18,22 @@ class _LoginViewState extends ConsumerState<LoginView> {
   bool _autoLogin = false;
 
   @override
+  void initState() {
+    super.initState();
+    // 빌드가 끝난 뒤 한 프레임 뒤에 실행
+    Future.microtask(() {
+      ref.read(loginViewModelProvider.notifier).refreshLogin();
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(loginViewModelProvider);
 
     ref.listen<LoginState>(loginViewModelProvider, (prev, next) {
       if (next.status == LoginStatus.success) {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/main');
       } else if (next.status == LoginStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message ?? '로그인 실패')),
@@ -91,7 +102,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
                 const SizedBox(height: 16),
 
-                // 3) 비밀번호 입력
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: true,
@@ -124,7 +134,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
                 const SizedBox(height: 16),
 
-                // 4) 로그인 버튼
                 state.status == LoginStatus.loading
                     ? CircularProgressIndicator(color: secondarySub1Color)
                     : SizedBox(
@@ -153,7 +162,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
                 const SizedBox(height:8),
 
-                // 5) 로그인 유지 체크박스
                 Row(
                   children: [
                     Checkbox(
@@ -177,10 +185,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        // 웹사이트 연결
+                        launchUrl(Uri.parse("https://recba.me/reset-password"));
                       },
                       child: Text(
-                        '아이디/비밀번호 찾기',
+                        '비밀번호 재설정',
                         style: TextStyle(
                           color: text700Color,
                           fontSize: 16,
@@ -190,7 +198,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     const SizedBox(height: 6),
                     GestureDetector(
                       onTap: () {
-                        // 웹사이트 연결
+                        launchUrl(Uri.parse("https://recba.me/register"));
                       },
                       child: Text(
                         '회원가입',
@@ -202,7 +210,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     ),
                   ],
                 ),
-                const Spacer(), // 하단 여백
+                const Spacer(),
               ],
             ),
           )
