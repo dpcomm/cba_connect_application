@@ -424,12 +424,12 @@ Future<void> fbMsgIosForegroundHandler(
   print('[FCM - Foreground] MESSAGE : ${message.notification}');
   if (message.notification != null) {
     flutterLocalNotificationsPlugin.show(
-      message.data['room_id'],
+      message.data['roomId'],
       message.notification?.title,
       message.notification?.body,
       NotificationDetails(
         iOS: DarwinNotificationDetails(
-          threadIdentifier: message.data['room_id'],
+          threadIdentifier: message.data['roomId'],
           presentAlert: true,
           presentBadge: true,
           presentSound: false,
