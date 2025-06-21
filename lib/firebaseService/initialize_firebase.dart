@@ -62,13 +62,49 @@ Future<void> initializeFirebaseAppSettings() async {
   // 플랫폼 확인후 권한요청 및 Flutter Local Notification Plugin 설정
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   AndroidNotificationChannel? androidNotificationChannel;
-  if (Platform.isIOS) {
-    //await reqIOSPermission(fbMsg);
+
+  await SecureStorage.write(key: 'notification-config-now', value: 'on');
+
+
+  if (Platform.isIOS) {    
+
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    // APNs 토큰 발급 대기 및 확인
+    String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+    int retry = 0;
+    while (apnsToken == null && retry < 5) {
+      await Future.delayed(Duration(seconds: 2));
+      apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      retry++;
+    }
+
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    print("-----------------------------fcmToken regist--------------------------------");
+    print("fcmToken: $fcmToken");
+    print("-----------------------------fcmToken regist--------------------------------");
+
+    FirebaseMessaging.onMessage.listen((message) {
+      fbMsgIosForegroundHandler(message, flutterLocalNotificationsPlugin);
+    });
+
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: false,
+    );
+
+
   } else if (Platform.isAndroid) {
     await FirebaseMessaging.instance.requestPermission();
-
-
-
 
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -80,24 +116,24 @@ Future<void> initializeFirebaseAppSettings() async {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(androidCarpoolNotificationChannel);
 
-
+    //Background Handling 백그라운드 메세지 핸들링
+    FirebaseMessaging.onBackgroundMessage(fbMsgAndroidBackgroundHandler);
+    //Foreground Handling 포어그라운드 메세지 핸들링
+    FirebaseMessaging.onMessage.listen((message) {
+      fbMsgAndroidForegroundHandler(
+          message, flutterLocalNotificationsPlugin);
+    });
   }
-  //Background Handling 백그라운드 메세지 핸들링
-  FirebaseMessaging.onBackgroundMessage(fbMsgBackgroundHandler);
-  //Foreground Handling 포어그라운드 메세지 핸들링
-  FirebaseMessaging.onMessage.listen((message) {
-    fbMsgForegroundHandler(
-        message, flutterLocalNotificationsPlugin);
-  });
+
   //Message Click Event Implement
   await setupInteractedMessage(fbMsg);
 
 }
 
 
-/// Firebase Background Messaging 핸들러
+/// Firebase Andriod Background Messaging 핸들러 - data only message
 @pragma('vm:entry-point')
-Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
+Future<void> fbMsgAndroidBackgroundHandler(RemoteMessage message) async {
   print("[FCM - Background] MESSAGE : ${message.messageId}");
   print('[FCM - Foreground] MESSAGE : ${message.data}');
 
@@ -232,8 +268,8 @@ Future<void> fbMsgBackgroundHandler(RemoteMessage message) async {
   }
 }
 
-/// Firebase Foreground Messaging 핸들러
-Future<void> fbMsgForegroundHandler(
+/// Firebase Android Foreground Messaging 핸들러 - data only message
+Future<void> fbMsgAndroidForegroundHandler(
     RemoteMessage message,
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
   print('[FCM - Foreground] MESSAGE : ${message.data}');
@@ -382,6 +418,32 @@ Future<void> fbMsgForegroundHandler(
   //         // ),
   //       ));        
   // }
+}
+
+/// Firebase IOS Foreground Messaging 핸들러 - notification message
+Future<void> fbMsgIosForegroundHandler(
+    RemoteMessage message,
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
+  
+  print('[FCM - Foreground] MESSAGE : ${message.notification}');
+  if (message.notification != null) {
+    flutterLocalNotificationsPlugin.show(
+      message.data['roomId'],
+      message.notification?.title,
+      message.notification?.body,
+      NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          threadIdentifier: message.data['roomId'],
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: false,
+          presentBanner: true,
+          presentList: true,
+        ),
+      ),  
+    );
+  }
+
 }
 
 /// FCM 메시지 클릭 이벤트 정의

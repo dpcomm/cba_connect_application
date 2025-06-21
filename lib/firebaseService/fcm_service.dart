@@ -30,11 +30,13 @@ class FcmService{
     if(tokenExists == null) {
       print("token is not exist");
       var fcmToken = await FirebaseMessaging.instance.getToken();
+      print("get token: $fcmToken");
       if (fcmToken != null) {
         await SecureStorage.write(key: 'firebase-token', value: fcmToken);        
         await _repo.registToken(RegistFcmDto(
           userId: userId,
           token: fcmToken,
+          platform: Platform.isIOS? "ios" : "android",
         ));
       }  
     }
@@ -45,13 +47,15 @@ class FcmService{
         await _repo.registToken(RegistFcmDto(
           userId: userId,
           token: nToken,
+          platform: Platform.isIOS? "ios" : "android",
         ));
       } else {
         await SecureStorage.write(key: 'firebase-token', value: nToken);        
         await _repo.refreshToken(RefreshFcmTokenDto(
           userId: userId, 
           oldToken: tokenExists, 
-          newToken: nToken
+          newToken: nToken,
+          platform: Platform.isIOS? "ios" : "android",
           ));
       }
     });
