@@ -7,7 +7,7 @@ class Config {
         token = 'dev-token';
 
   Config._prod()
-      : baseUrl = 'http://121.143.179.182:8081',
+      : baseUrl = 'https://recba.me',
         token = 'prod-token';
 
   static late final Config instance;
