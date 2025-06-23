@@ -1,7 +1,7 @@
 import 'package:cba_connect_application/core/color.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view.dart';
-import 'package:cba_connect_application/presentation/mycarpool/mycarpool_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/setting_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/home_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/my_carpool/mycarpool_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/setting/setting_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

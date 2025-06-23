@@ -1,6 +1,6 @@
 import 'package:cba_connect_application/core/lifecycle_manager.dart';
 import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 import 'package:cba_connect_application/repositories/chat_repository.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

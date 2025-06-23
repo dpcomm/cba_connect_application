@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
 import 'package:cba_connect_application/dto/create_carpool_dto.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/address_search_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/address_search/address_search_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 import 'package:cba_connect_application/presentation/widgets/date_time_view.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/setting_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/setting//setting_view_model.dart';
 
 class RegistrationView extends ConsumerStatefulWidget {
   final String destination;

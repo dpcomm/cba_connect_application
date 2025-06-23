@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
-import 'package:cba_connect_application/core/custom_exception.dart';
-import '../main/pages/home/registration_view_model.dart';
+import '/core/custom_exception.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 
 enum MyCarpoolDetailStatus { initial, loading, success, left, deleted, error }
 

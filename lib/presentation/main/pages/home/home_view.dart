@@ -4,11 +4,11 @@ import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/carpool_detail_page_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/card_detail_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/carpool_detail_page/carpool_detail_page_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/carpool_list_item_view.dart';
 import 'package:cba_connect_application/presentation/widgets/loading_spinner_view.dart';
 import 'package:intl/intl.dart';
-import 'carpool_search_view_model.dart';
+import 'home_view_model.dart';
 
 
 class CarpoolSearchView extends ConsumerStatefulWidget {

@@ -1,11 +1,11 @@
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/carpool_edit_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/carpool_edit/carpool_edit_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/address_search_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart'; 
+import 'package:cba_connect_application/presentation/main/pages/home/address_search/address_search_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 import 'package:cba_connect_application/presentation/widgets/date_time_view.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart'; // CarpoolRoom, UpdateCarpoolInfoDto 필요
 import 'package:cba_connect_application/models/carpool_room.dart';

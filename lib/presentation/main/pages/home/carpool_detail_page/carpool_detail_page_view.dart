@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
 import 'package:cba_connect_application/presentation/widgets/button_view.dart';
 import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
-import '../../../login/login_view_model.dart';
-import 'carpool_detail_page_view_model.dart';
+import '../../../../login/login_view_model.dart';
+import '../carpool_detail_page/carpool_detail_page_view_model.dart';
 
 class CarpoolDetailPageView extends ConsumerStatefulWidget {
   final int id;

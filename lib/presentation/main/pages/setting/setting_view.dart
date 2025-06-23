@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/setting_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/setting//setting_view_model.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:flutter/services.dart';
 
