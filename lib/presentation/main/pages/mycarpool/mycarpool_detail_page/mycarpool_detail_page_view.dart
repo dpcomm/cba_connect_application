@@ -1,13 +1,13 @@
 import 'package:cba_connect_application/presentation/chat/chat_view.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/carpool_edit/carpool_edit_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/my_carpool/mycarpool_detail_page_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/mycarpool/mycarpool_detail_page/mycarpool_detail_page_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kakao_map_native/kakao_map_native_view.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:cba_connect_application/models/user.dart';
-import '../home/carpool_detail_page/carpool_detail_page_view_model.dart';
+import '../../home/carpool_detail_page/carpool_detail_page_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:cba_connect_application/core/color.dart';
 

@@ -1,10 +1,10 @@
-import 'package:cba_connect_application/presentation/main/pages/my_carpool/mycarpool_detail_page_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/mycarpool/mycarpool_detail_page/mycarpool_detail_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
-import 'package:cba_connect_application/presentation/main/pages/my_carpool/mycarpool_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/mycarpool/mycarpool_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 
 class MyCarpoolView extends ConsumerStatefulWidget {

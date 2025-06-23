@@ -1,28 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/config/app_config.dart';
 import 'package:cba_connect_application/firebaseService/initialize_firebase.dart';
 import 'package:cba_connect_application/presentation/login/login_view.dart';
 import 'package:cba_connect_application/presentation/main/main_view.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CBA Connect 카풀',
-      initialRoute: '/',
-      routes: {
-        '/': (_) => LoginView(),
-        '/main': (_) => MainView(),
-      },
-    );
-  }
-}
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +23,48 @@ void main() async {
    */
   await initializeFirebaseAppSettings();
 
-  runApp(ProviderScope(child: MyApp()));
+  runApp(const AppRoot());
   FlutterNativeSplash.remove();
+}
+
+class AppRoot extends StatefulWidget {
+  const AppRoot({Key? key}) : super(key: key);
+
+  @override
+  State<AppRoot> createState() => _AppRootState();
+
+  static void resetProviders() {
+    final state = _AppRootState.instance;
+    state?._resetScope();
+  }
+}
+
+class _AppRootState extends State<AppRoot> {
+  static _AppRootState? instance;
+  Key _scopeKey = UniqueKey();
+
+  @override
+  void initState() {
+    super.initState();
+    instance = this;
+  }
+
+  void _resetScope() {
+    setState(() => _scopeKey = UniqueKey());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      key: _scopeKey,
+      child: MaterialApp(
+        title: 'CBA Connect 카풀',
+        initialRoute: '/',
+        routes: {
+          '/': (_) => LoginView(),
+          '/main': (_) => MainView(),
+        },
+      ),
+    );
+  }
 }

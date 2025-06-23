@@ -1,4 +1,5 @@
 import 'package:cba_connect_application/core/color.dart';
+import 'package:cba_connect_application/main.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:cba_connect_application/repositories/fcm_repository.dart';
 import 'package:flutter/material.dart';
@@ -253,6 +254,47 @@ class SettingViewModel extends StateNotifier<SettingState> {
       }
     }
   }
+
+  Future<void> handleLogout(BuildContext context, {bool showSnackBar = true}) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('정말 로그아웃하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('예'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true) return;
+
+    try {
+      await SecureStorage.delete(key: 'access-token');
+      await SecureStorage.delete(key: 'refresh-token');
+
+      AppRoot.resetProviders();
+
+      Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+    } on CustomException catch (e) {
+      state = state.copyWith(status: SettingStatus.error, message: e.message);
+      if (showSnackBar) _showSnackBar(context, state.message!);
+    } catch (e) {
+      state = state.copyWith(
+        status: SettingStatus.error,
+        message: '로그아웃 중 오류가 발생했습니다: ${e.toString()}',
+      );
+      if (showSnackBar) _showSnackBar(context, state.message!);
+    }
+  }
+
 
   // 스낵바 표시 헬퍼 함수
   void _showSnackBar(BuildContext context, String message) {

@@ -244,13 +244,7 @@ class _SettingViewState extends ConsumerState<SettingView> {
             // 로그아웃 버튼
             Center(
               child: TextButton(
-                onPressed: () {
-                  // loginViewModel.logout(); // LoginViewModel의 로그아웃 메서드 호출
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('로그아웃 되었습니다.')),
-                  );
-                  // (TODO: 로그아웃 후 로그인 화면으로 이동)
-                },
+                onPressed: () => settingViewModel.handleLogout(context),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.grey[700],
                   textStyle: const TextStyle(
