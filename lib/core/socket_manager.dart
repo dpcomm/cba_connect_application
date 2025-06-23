@@ -40,5 +40,9 @@ class SocketManager {
     }
   } 
 
+  IO.Socket getSocket() {
+    return socket;
+  }
+
   void disconnect() => socket.disconnect();
 }

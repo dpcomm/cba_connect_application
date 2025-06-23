@@ -11,6 +11,8 @@ import 'package:intl/intl.dart'; // DateFormat 사용을 위해 추가
 import 'package:flutter/material.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:cba_connect_application/core/socket_manager.dart';
 
 
 final chatRoomDetailProvider = StateProvider.family<CarpoolRoomDetail?, int>((ref, roomId) {
@@ -228,6 +230,12 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
 
       // 정렬 및 날짜 구분선 추가해서 state 업데이트
       _updateStateWithDividers(allRawMessages);
+
+      final socketManager = SocketManager();
+      final IO.Socket socket = socketManager.getSocket();
+
+      socket.off('reconnect');
+      socket.on('reconnect', requestUnreadHandler);      
 
     } catch (e) {
       print('[ChatViewModel][_init] 초기 메세지 불러오기 실패: $e');
@@ -602,6 +610,10 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
     }
   }
 
+  void requestUnreadHandler(dynamic payload) {
+    
+  }
+
   @override
   void dispose() {
     // print('[ChatViewModel][dispose] 뷰모델 dispose 메서드 호출됨 (저장 로직은 ref.onDispose에서 처리)');
@@ -610,6 +622,13 @@ class ChatViewModel extends StateNotifier<List<ChatItem>> {
     _scrollToBottomController.close();
     _scrollToIndexController.close();
     _unreadDividerIndexController.close();
+    
+    final socketManager = SocketManager();
+    final IO.Socket socket = socketManager.getSocket();
+
+    socket.off('reconnect', requestUnreadHandler);
+    // socket.on('reconnect', );      
+
     super.dispose();
   }
 }
