@@ -107,20 +107,29 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
         surfaceTintColor: Colors.transparent, 
         scrolledUnderElevation: 0,          
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.black),
-        leading: null,
-        // leading: const BackButton(),
-        title: const Text(
-          '마이 카풀',
-          style: TextStyle(
-            fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
+        titleSpacing: 16, // 좌측 여백
+        title: Row(
+          mainAxisSize: MainAxisSize.min, // Row의 크기를 자식 위젯에 맞게 최소화
+          children: [
+            Icon(Icons.directions_car),
+            SizedBox(width: 8), // 아이콘과 텍스트 사이 간격
+            Text(
+              '마이 카풀',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight + 10), // 탭바 높이 + 상단 패딩
+          preferredSize: const Size.fromHeight(kToolbarHeight), // 탭바 높이
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: [
+                const SizedBox(height: 12),
                 Container(
                   height: 40, // 탭바 높이
                   decoration: BoxDecoration(
@@ -153,7 +162,7 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
           ),
         ),
       ),
-            body: Padding(
+      body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +281,7 @@ class MyCarpoolListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 1.0),
-      padding: const EdgeInsets.all(6.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.0),
@@ -364,12 +373,12 @@ class MyCarpoolListItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   '출발시간 : $departureTime',
                   style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   '운전자 : $driverName',
                   style: TextStyle(fontSize: 12, color: Colors.grey[700]),

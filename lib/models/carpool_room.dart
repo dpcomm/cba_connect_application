@@ -67,7 +67,6 @@ class CarpoolRoom {
     }
 
     final driverJson = json['driver'];
-    /// Map이면 파싱, 아니면 driverId만 갖는 최소 정보 객체 생성
     final driver = (driverJson is Map<String, dynamic>)
         ? Driver.fromJson(driverJson)
         : Driver(
