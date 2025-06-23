@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/dto/update_carpool_info_dto.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:cba_connect_application/repositories/carpool_repository.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 
 enum CarpoolEditStatus { initial, loading, success, error }
 
