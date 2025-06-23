@@ -1,5 +1,6 @@
 import 'package:cba_connect_application/core/color.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
+import 'package:cba_connect_application/repositories/fcm_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,9 @@ import 'package:cba_connect_application/datasources/user_data_source.dart';
 import 'package:cba_connect_application/core/custom_exception.dart';
 import 'package:cba_connect_application/dto/update_user_dto.dart';
 import 'package:cba_connect_application/core/secure_storage.dart';
+import 'package:cba_connect_application/core/provider.dart';
+import 'package:cba_connect_application/dto/delete_fcm_token_dto.dart';
+import 'package:cba_connect_application/dto/regist_fcm_dto.dart';
 
 
 enum SettingStatus { initial, loading, success, error }
@@ -134,6 +138,21 @@ class SettingViewModel extends StateNotifier<SettingState> {
     // SecureStorage에 저장
     final storageValue = newValue ? 'on' : 'off';
     await SecureStorage.write(key: 'notification-config', value: storageValue);
+
+    final loginState = _ref.read(loginViewModelProvider);
+    final userId = loginState.user?.id;
+
+    final repository = _ref.read(fcmRepositoryProvider);    
+    final token = await SecureStorage.read(key: 'firebase-token');
+
+    
+    if (storageValue == 'on') {
+      if (token != null) { await repository.registToken(RegistFcmDto(userId: userId!, token: token, platform: "ios")); }      
+    } else if (storageValue == 'off') {
+      if (token != null) { await repository.deleteToken(DeleteFcmTokenDto(token: token)); }
+    }
+
+
   }
 
   /// 이름 저장
