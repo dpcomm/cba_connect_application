@@ -13,6 +13,9 @@ import 'package:cba_connect_application/datasources/fcm_data_source.dart';
 import 'package:cba_connect_application/repositories/fcm_repository.dart';
 import 'package:cba_connect_application/firebaseService/fcm_service.dart';
 
+import 'package:cba_connect_application/datasources/chat_report_datasource.dart';
+import 'package:cba_connect_application/repositories/chat_report_repository.dart';
+
 final socketManagerProvider = Provider((ref) => SocketManager());
 
 final chatEventHandlerProvider = Provider((ref) {
@@ -59,4 +62,17 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
 final lifecycleManagerProvider = Provider.family.autoDispose<LifecycleManager, int>((ref, userId) {
   final repository = ref.read(fcmRepositoryProvider);
   return LifecycleManager(userId, repository);
+});
+
+
+// DataSource 프로바이더
+final chatreportDataSourceProvider = Provider<ChatreportDataSource>((ref) {
+  return ChatreportDataSourceImpl();
+});
+
+// Repository 프로바이더
+
+final chatreportRepositoryProvider = Provider<ChatreportRepository>((ref) {
+  final dataSource = ref.read(chatreportDataSourceProvider);
+  return ChatreportRepositoryImpl(dataSource);
 });
