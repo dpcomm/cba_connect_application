@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:cba_connect_application/core/color.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'login_view_model.dart';
+
+class PermissionItem {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  PermissionItem({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+}
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -20,12 +33,16 @@ class _LoginViewState extends ConsumerState<LoginView> {
   @override
   void initState() {
     super.initState();
-    // 빌드가 끝난 뒤 한 프레임 뒤에 실행
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+    ));
     Future.microtask(() {
       ref.read(loginViewModelProvider.notifier).refreshLogin();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
