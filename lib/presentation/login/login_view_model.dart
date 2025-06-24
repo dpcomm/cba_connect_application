@@ -1,7 +1,9 @@
 import 'package:cba_connect_application/core/provider.dart';
 import 'package:cba_connect_application/core/secure_storage.dart';
 import 'package:cba_connect_application/datasources/auth_data_source.dart';
+import 'package:cba_connect_application/datasources/consent_data_source.dart';
 import 'package:cba_connect_application/repositories/auth_repository.dart';
+import 'package:cba_connect_application/repositories/consent_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/models/user.dart';
@@ -25,12 +27,13 @@ class LoginState {
 class LoginViewModel extends StateNotifier<LoginState> {
   final Ref ref;
   final AuthRepository _repository;
+  final ConsentRepository _consentRepo;
   final FcmService _fcmService;
   final socketManager = SocketManager();
 
 
   // 자식 클래스에서 생성자 호출 전 부모 클래스의 생성자 호출
-  LoginViewModel(this.ref, this._repository, this._fcmService) : super(LoginState());
+  LoginViewModel(this.ref, this._repository, this._fcmService, this._consentRepo) : super(LoginState());
 
   Future<void> login(String userId, String password, bool autoLogin) async {
     // 로그인 상태 값
@@ -63,6 +66,13 @@ class LoginViewModel extends StateNotifier<LoginState> {
 
       socketManager.setSocket(response.accessToken);
       socketManager.connect();
+
+      /// 서버에 개인정보 동의가 되어있는지 확인 후 서버에 반영.
+      /// 초기에 로컬에 동의를 했기 떄문에 따로 동의를 받지 않고 바로 서버로 반영함.
+      final isConsent = await _consentRepo.fetchConsent(response.user.id, "PrivacyPolicy");
+      if (isConsent.value == false) {
+        await _consentRepo.createConsent(userId: response.user.id, consentType: "PrivacyPolicy", value: true);
+      }
 
       // 성공했으므로 로그인 전역변수를 성공으로 변경 + user 정보 상태에 포함
       state = LoginState(status: LoginStatus.success, user: response.user);
@@ -144,11 +154,16 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(dataSource: dataSource);
 });
 
+final consentRepositoryProvider = Provider<ConsentRepository>((ref) {
+  return ConsentRepositoryImpl(ConsentDataSourceImpl());
+});
+
 // ViewModel 프로바이더
 // ViewModel에 authRepository를 주입.
 final loginViewModelProvider =
     StateNotifierProvider<LoginViewModel, LoginState>((ref) {
       final repo = ref.read(authRepositoryProvider);
       final fcmService = ref.read(fcmServiceProvider);
-      return LoginViewModel(ref, repo, fcmService);
+      final consentRepo = ref.read(consentRepositoryProvider);
+      return LoginViewModel(ref, repo, fcmService, consentRepo);
     });

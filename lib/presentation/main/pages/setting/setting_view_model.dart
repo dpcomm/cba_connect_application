@@ -277,6 +277,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
     if (shouldLogout != true) return;
 
     try {
+      _showSnackBar(context, '로그아웃 되었습니다.');
       await SecureStorage.delete(key: 'access-token');
       await SecureStorage.delete(key: 'refresh-token');
 
