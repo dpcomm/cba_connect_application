@@ -4,6 +4,9 @@ import 'package:cba_connect_application/core/provider.dart';
 import 'package:cba_connect_application/models/chat.dart';
 import 'package:cba_connect_application/models/chat_item.dart';
 import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
+import 'package:cba_connect_application/presentation/chat/chat_members_view_model.dart';
+import 'package:cba_connect_application/models/carpool_room.dart';
+import 'package:cba_connect_application/presentation/chat/chat_report_view.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:cba_connect_application/core/color.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +21,7 @@ class ChatView extends ConsumerStatefulWidget {
 }
 
 class _ChatViewState extends ConsumerState<ChatView> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToBottomButton = false;
   int _lastKnownItemCount = 0;
@@ -80,7 +83,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
     }
   }
 
-  // 운전자에게 전화 걸기 함수
+  // 전화 걸기 함수
   Future<void> _makePhoneCall(String phone) async {
     print('[ChatView][_makePhoneCall] 시도 전화번호: $phone');
 
@@ -100,7 +103,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
 
     try {
       final bool canLaunch = await canLaunchUrl(launchUri);
-      print('[ChatView][_makePhoneCall] canLaunchUrl 결과: $canLaunch'); // canLaunchUrl 결과 로그 추가
+      print('[ChatView][_makePhoneCall] canLaunchUrl 결과: $canLaunch');
 
       if (canLaunch) {
         await launchUrl(launchUri);
@@ -119,9 +122,189 @@ class _ChatViewState extends ConsumerState<ChatView> {
     }
   }
 
+  void _showMembersPopup(BuildContext context, int roomId, int currentUserId) {
+    final carpoolDetail = ref.read(chatRoomDetailProvider(roomId));
+    final int? driverId = carpoolDetail?.room.driver.id;
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Center(child: Text('카풀 참여자')),
+          content: Consumer(
+            builder: (context, ref, _) {
+              final state = ref.watch(carpoolMembersProvider(roomId));
+
+              switch (state.status) {
+                case CarpoolMembersStatus.loading:
+                  return const Center(child: CircularProgressIndicator());
+                case CarpoolMembersStatus.error:
+                  return Text(state.message ?? '멤버 정보를 불러올 수 없습니다.');
+                case CarpoolMembersStatus.success:
+
+                  final List<CarpoolUserInfo> sortedMembers = List.from(state.members);
+                  final int driverIndex = sortedMembers.indexWhere((member) => member.userId == driverId);
+
+                  if (driverIndex != -1) {
+                    final CarpoolUserInfo driver = sortedMembers.removeAt(driverIndex);
+                    sortedMembers.insert(0, driver);
+                  }
+                  
+                  return SizedBox(
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: sortedMembers.length,
+                      itemBuilder: (context, index) {
+                        final member = sortedMembers[index];
+                        final isMe = member.userId == currentUserId;
+                        final isDriver = member.userId == driverId;
+
+                        return ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            isDriver ? Icons.directions_car : Icons.person,
+                          ),
+                          title: Text(member.name + (isMe ? '(나)' : '')),
+                          // subtitle: Text(member.phone),
+                          trailing: isMe
+                            ? null
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      backgroundColor: secondarySub2Color.withOpacity(0.1),
+                                    ),
+                                    onPressed: member.phone.isNotEmpty
+                                        ? () => _makePhoneCall(member.phone)
+                                        : null,
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.call, size: 20),
+                                        SizedBox(width: 2),
+                                        Text('통화'),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      backgroundColor: Colors.red.withOpacity(0.07),
+                                      foregroundColor: Colors.red,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      _goToReportPage(context, roomId, member.userId, member.name);
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.report, size: 20),
+                                        SizedBox(width: 2),
+                                        Text('신고'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                        );
+                      },
+                    ),
+                  );
+                case CarpoolMembersStatus.initial:
+                default:
+                  return const SizedBox.shrink();
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('닫기'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _goToReportPage(BuildContext context, int roomId, int reportedUserId, String reportedUserName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatReportView(
+          roomId: roomId,
+          reportedUserId: reportedUserId,
+          reportedUserName: reportedUserName,
+        ),
+      ),
+    );
+  }
+
+  void _showCarpoolInfo(BuildContext context, CarpoolRoomDetail? detail) {
+    if (detail == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            '카풀 정보',
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.place, size: 20, color: secondaryColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('장소: ${detail.room.originDetailed}\n(${detail.room.origin})'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, size: 20, color: secondaryColor),
+                  const SizedBox(width: 8),
+                  Text('시간: ${DateFormat('yyyy-MM-dd, HH:mm').format(detail.room.departureTime)}'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.drive_eta, size: 20, color: secondaryColor),
+                  const SizedBox(width: 8),
+                  Text('운전자: ${detail.room.driver.name} (${detail.room.driver.phone})'),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('닫기')),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
-    _controller.dispose();
+    _textController.dispose();
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
@@ -130,6 +313,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
   @override
   Widget build(BuildContext context) {
     final loginState = ref.watch(loginViewModelProvider);
+    final membersState = ref.watch(carpoolMembersProvider(widget.roomId));
+    final membersViewModel = ref.read(carpoolMembersProvider(widget.roomId).notifier);
     final currentUserId = loginState.user?.id;
 
     if (currentUserId == null) {
@@ -137,26 +322,14 @@ class _ChatViewState extends ConsumerState<ChatView> {
     }
 
     final chatItems = ref.watch(chatViewModelProvider(widget.roomId));
-    final chatViewModel = ref.read(
-      chatViewModelProvider(widget.roomId).notifier,
-    );
+    final chatViewModel = ref.read(chatViewModelProvider(widget.roomId).notifier);
 
     final carpoolDetail = ref.watch(chatRoomDetailProvider(widget.roomId));
     final int? driverId = chatViewModel.driverId;
-
-    // CarpoolRoomDetail에서 운전자 이름 가져오기.
-    String driverName = carpoolDetail?.room.driver.name ?? '운전자';
-    // 현재 인원 (운전자 포함)
+    final String driverName = carpoolDetail?.room.driver.name ?? '운전자';
+    // 현재 인원
     int currentMembers = (carpoolDetail?.room.seatsTotal ?? 0) - (carpoolDetail?.room.seatsLeft ?? 0);
     int maxMembers = carpoolDetail?.room.seatsTotal ?? 0;
-    // 운전자 전화번호
-    String driverPhoneNumber = carpoolDetail?.room.driver.phone ?? '';
-
-    // 카풀 시간
-    final dt = carpoolDetail?.room.departureTime;
-    // final formatter = DateFormat('M/d a h:m');
-    final formatter = DateFormat('d일 h:m');
-    final formatted = dt == null ? '' : formatter.format(dt);
 
     final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
@@ -173,29 +346,38 @@ class _ChatViewState extends ConsumerState<ChatView> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          // title: Text('$driverName님 카풀 | $formatted'), // 가로 길이 확인 필요
-          title: Text('$driverName님 카풀 채팅방'),
+          centerTitle: false,
+          title: Text('$driverName님 카풀 메시지'),
           actions: [
-            if (carpoolDetail != null)
-              Row(
-                children: [
-                  const Icon(Icons.person, color: Colors.black),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$currentMembers/$maxMembers', // 현재 인원 / 모집 정원
-                    style: const TextStyle(fontSize: 16, color: Colors.black),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (carpoolDetail != null)
+                  Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: Text(
+                      '$currentMembers/$maxMembers',
+                      style: const TextStyle(fontSize: 16, color: Colors.black),
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                ],
-              ),
-            IconButton(
-              icon: const Icon(Icons.call),
-              onPressed: driverPhoneNumber.isNotEmpty
-                  ? () => _makePhoneCall(driverPhoneNumber)
-                  : null, // 전화번호가 있을 때만 클릭 가능
+                InkWell(
+                  onTap: () {
+                    ref.read(carpoolMembersProvider(widget.roomId).notifier).loadMembers();
+                    _showMembersPopup(context, widget.roomId, currentUserId);
+                  },
+                  child: const Icon(Icons.people, color: secondaryColor),
+                ),
+                const SizedBox(width: 12),
+                InkWell(
+                  onTap: () {
+                    _showCarpoolInfo(context, carpoolDetail);
+                  },
+                  child: const Icon(Icons.info_outline, color: secondaryColor),
+                ),
+                const SizedBox(width: 12), // 끝 여백
+              ],
             ),
-            const SizedBox(width: 8), // 아이콘과 끝 여백
-          ],
+          ]
         ),
         body: Stack(
           children: [
@@ -217,6 +399,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
                           isMine,
                           currentUserId,
                           driverId,
+                          onResend: (chat) => chatViewModel.retryMessage(chat),
+                          onDelete: (chat) => chatViewModel.deleteFailedMessage(chat),
                         );
                       } else if (chatItem is UnreadDividerItem) {
                         return Container(
@@ -326,7 +510,12 @@ class _ChatViewState extends ConsumerState<ChatView> {
     });
   }
 
-  Widget _buildMessageBubble(ChatMessageItem chatItem, bool isMine, int? currentUserId, int? driverId) {
+  Widget _buildMessageBubble(ChatMessageItem chatItem, bool isMine, int? currentUserId, int? driverId,    
+    {
+      required void Function(Chat) onResend,
+      required void Function(Chat) onDelete,
+    }
+  ) {
     final message = chatItem.chat;
     final status = chatItem.status;
     final senderName = chatItem.senderName;
@@ -399,12 +588,43 @@ class _ChatViewState extends ConsumerState<ChatView> {
         if (status == ChatStatus.failed)
           Align(
             alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-            child: Text(
-              '전송 실패!',
-              style: TextStyle(fontSize: 10, color: Colors.red),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.refresh, size: 14, color: secondaryColor),
+                        tooltip: '재전송',
+                        onPressed: () => onResend(chatItem.chat),
+                        visualDensity: VisualDensity.compact, // 내부 여백 축소
+                        padding: EdgeInsets.zero, // 버튼 padding 제거
+                        constraints: const BoxConstraints(), // 기본 크기 제한 제거
+                      ),
+                    ),
+                    // const SizedBox(width: 1), // 버튼 사이 간격
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 14, color: Colors.red),
+                        tooltip: '삭제',
+                        onPressed: () => onDelete(chatItem.chat),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    )
+                  ],
+                )
+              ],
             ),
           ),
-      ],
+        ],
     );
   }
 
@@ -454,11 +674,11 @@ class _ChatViewState extends ConsumerState<ChatView> {
           children: [
             Expanded(
               child: TextField(
-                controller: _controller,
+                controller: _textController,
                 minLines: 1,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  hintText: '메세지를 입력하세요.',
+                  hintText: '메시지를 입력하세요.',
                   border: InputBorder.none,
                 ),
                 style: const TextStyle(fontSize: 16),
@@ -466,10 +686,10 @@ class _ChatViewState extends ConsumerState<ChatView> {
             ),
             GestureDetector(
               onTap: () {
-                final text = _controller.text.trim();
+                final text = _textController.text.trim();
                 if (text.isEmpty) return;
                 chatViewModel.sendMessage(text);
-                _controller.clear();
+                _textController.clear();
                 _scrollToBottom();
               },
               child: const Padding(

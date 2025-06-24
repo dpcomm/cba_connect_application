@@ -10,6 +10,7 @@ import 'package:cba_connect_application/models/user.dart';
 import '../../home/carpool_detail_page/carpool_detail_page_view_model.dart';
 import 'package:cba_connect_application/presentation/login/login_view_model.dart';
 import 'package:cba_connect_application/core/color.dart';
+import 'package:cba_connect_application/core/phone_utils.dart';
 
 const Widget H_Space4 = SizedBox(height: 4.0);
 const Widget H_Space8 = SizedBox(height: 8.0);
@@ -61,8 +62,28 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
     });
   }
 
-  void _leaveCarpool() {
-    print('카풀 나가기: roomId=${widget.id}, userId=${_currentUserId}');
+  Future<void> _leaveCarpool() async {
+
+    final shouldLeave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('카풀 나가기'),
+        content: const Text('정말 카풀에서 나가시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('예'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLeave != true) return;
+
     if (_currentUserId != null) {
       ref.read(myCarpoolDetailPageProvider.notifier).leaveCarpool(_currentUserId!, widget.id).then((_) {
         final state = ref.read(myCarpoolDetailPageProvider);
@@ -70,7 +91,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('카풀에서 나갔습니다.')),
           );
-          Navigator.of(context).pop(); // 성공 시 이전 페이지로 돌아가기
+          Navigator.of(context).pop();
         } else if (state.status == MyCarpoolDetailStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message ?? '카풀 나가기에 실패했습니다.')),
@@ -80,8 +101,29 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
     }
    }
 
-  void _cancelCarpoolRegistration() {
+  Future<void> _cancelCarpoolRegistration() async {
     print('카풀 삭제: roomId=${widget.id}');
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('카풀 삭제'),
+        content: const Text('정말 카풀을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('예'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) return;
+
     if (_currentUserId != null) {
       ref.read(myCarpoolDetailPageProvider.notifier).deleteCarpool(widget.id).then((_) {
         final state = ref.read(myCarpoolDetailPageProvider);
@@ -190,7 +232,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
         ? '도착지 정보 없음'
         : (destinationRaw == "경기도 양주시 광적면 현석로 313-44" ? "수련회장" : destinationRaw);
 
-    final timeText = DateFormat('M월 d일, a h시 m분', 'ko').format(roomDetail.room.departureTime);
+    final timeText = DateFormat('M월 d일, a h시 mm분', 'ko').format(roomDetail.room.departureTime);
 
     return SingleChildScrollView(
       child: 
@@ -369,18 +411,41 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
       children: [
         const CircleAvatar(radius: 25),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              driver.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '운전자 ${driver.phone.isEmpty ? '연락처 없음' : driver.phone} | ${carInfo}',
-              style: const TextStyle(color: text700Color, fontSize: 13),
-            ),
-          ],
+        Expanded(  // 공간 남으면 텍스트 줄바꿈 가능하게 확장
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                      driver.name,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                  onTap: () => makePhoneCall(context, driver.phone),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: secondarySub2Color,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(3),
+                      child: const Icon(
+                        Icons.phone,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              Text(
+                '운전자 ${driver.phone.isEmpty ? '연락처 없음' : driver.phone} | $carInfo',
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -398,14 +463,33 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
             child: Icon(Icons.person, color: Colors.grey.shade700, size: 18),
           ),
           const SizedBox(width: 12),
-          Text(
-            name,
-            style: const TextStyle(fontSize: 14),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            phoneNumber,
-            style: const TextStyle(fontSize: 14, color: text700Color),
+          Expanded(
+            child: Row(
+              children: [
+                Text(name, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 12),
+                Text(
+                  phoneNumber,
+                  style: const TextStyle(fontSize: 14, color: text700Color),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => makePhoneCall(context, phoneNumber),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: secondarySub2Color,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(3),
+                    child: const Icon(
+                      Icons.phone,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
         ],
       ),
@@ -439,7 +523,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
                 }
               },
               child: Text(
-                _isDriver ? '카풀 삭제' : '카풀 나가기',
+                _isDriver ? '카풀 삭제하기' : '카풀 나가기',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -467,7 +551,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
                 );
               },
               child: const Text(
-                '채팅방',
+                '메시지',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),

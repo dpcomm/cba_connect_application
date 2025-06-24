@@ -2,7 +2,7 @@ import 'package:cba_connect_application/core/lifecycle_manager.dart';
 import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 import 'package:cba_connect_application/repositories/chat_repository.dart';
-import 'package:cba_connect_application/repositories/carpool_repository.dart';
+import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/socket_event_handler/chat_event_handler.dart';
@@ -35,6 +35,9 @@ final chatViewModelProvider = StateNotifierProvider.family
       return ChatViewModel(roomId: roomId, repository: repository, carpoolRepository: carpoolRepository, ref: ref);
 });
 
+final chatRoomDetailProvider = StateProvider.family<CarpoolRoomDetail?, int>((ref, roomId) {
+  return null; // 초기값은 null
+});
 
 
 
