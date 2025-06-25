@@ -13,8 +13,8 @@ class ReportChatDto {
 
   Map<String, dynamic> toJson() => {
     'reporterId': reporter,
-    'reportedId': reported,
-    'roomid': roomId,
+    'reportedUserId': reported,
+    'roomId': roomId,
     'reason': reason,
   };
 }

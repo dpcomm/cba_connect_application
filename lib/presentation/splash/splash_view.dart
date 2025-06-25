@@ -38,20 +38,6 @@ class _SplashViewState extends ConsumerState<SplashView> {
   }
 
   Future<void> _startFlow() async {
-    if (await _versionChecker.isUpdateNeeded()) {
-      final versions = await _versionChecker.getVersions();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => UpdateView(
-            currentVersion: versions['current']!,
-            latestVersion:  versions['latest']!,
-          ),
-        ),
-      );
-      return;
-    }
-
-
     /// 버전 체크
     if (Config.instance.flavor == "prod") {
       if (await _versionChecker.isUpdateNeeded()) {

@@ -4,7 +4,7 @@ class Config {
   final String _flavor;
 
   Config._dev()
-      : baseUrl = 'http://192.168.0.166:3000',
+      : baseUrl = 'http://localhost:3000',
         token = 'dev-token',
         _flavor = 'dev';
 

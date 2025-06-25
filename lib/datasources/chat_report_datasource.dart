@@ -14,10 +14,12 @@ class ChatreportDataSourceImpl implements ChatreportDataSource {
 
   @override
   Future<void> report(ReportChatDto dto) async {
+
     try {
       print("report chat");
+      print(dto.toJson());
       await _dio.post(
-        'api/chatreport/report',
+        '/api/chatreport/report',
         data: dto.toJson(),
       );
     } on DioError catch (e) {

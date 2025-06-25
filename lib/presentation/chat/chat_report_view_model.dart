@@ -35,8 +35,19 @@ class ChatReportParam {
     required this.reportedUserId,
     required this.reporterId,
   });
-}
 
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is ChatReportParam &&
+            other.roomId == roomId &&
+            other.reportedUserId == reportedUserId &&
+            other.reporterId == reporterId;
+  }
+
+  @override
+  int get hashCode => Object.hash(roomId, reportedUserId, reporterId);
+}
 class ChatReportViewModel extends StateNotifier<ChatReportState> {
   final ChatreportRepository _repository;
   final int roomId;
@@ -60,10 +71,6 @@ class ChatReportViewModel extends StateNotifier<ChatReportState> {
       return;
     }
 
-    if (!mounted) {
-      print('[ChatReportViewModel] ViewModel is NOT mounted (disposed) before setting SUBMITTING status. Aborting.');
-      return; // 이미 dispose되었다면 더 이상 진행하지 않음
-    }
     state = state.copyWith(status: ReportStatus.submitting);
 
     print('[ChatReportViewModel] Setting status to SUBMITTING.');
@@ -81,11 +88,6 @@ class ChatReportViewModel extends StateNotifier<ChatReportState> {
 
       await _repository.report(dto);
 
-      if (!mounted) {
-        print('[ChatReportViewModel] ViewModel disposed after repository call. Aborting state update.');
-        return;
-      }
-
       print('[ChatReportViewModel] repository.report SUCCESS. Setting status to SUCCESS.');
 
       state = state.copyWith(status: ReportStatus.success, message: '신고가 접수되었습니다.');
@@ -101,8 +103,7 @@ class ChatReportViewModel extends StateNotifier<ChatReportState> {
 }
 
 // 프로바이더 생성 - 파라미터가 여러 개라 family 사용
-final chatReportViewModelProvider = StateNotifierProvider.family
-    .autoDispose<ChatReportViewModel, ChatReportState, ChatReportParam>((ref, params) {
+final chatReportViewModelProvider = StateNotifierProvider.family<ChatReportViewModel, ChatReportState, ChatReportParam>((ref, params) {
   final repository = ref.read(chatreportRepositoryProvider);
   return ChatReportViewModel(
     repository: repository,

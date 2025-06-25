@@ -20,11 +20,18 @@ class ChatReportView extends ConsumerStatefulWidget {
 }
 
 class _ChatReportViewState extends ConsumerState<ChatReportView> {
+  late final ChatReportParam _params;
   final TextEditingController _reasonController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    final currentUserId = ref.read(loginViewModelProvider).user!.id;
+    _params = ChatReportParam(
+      roomId: widget.roomId,
+      reportedUserId: widget.reportedUserId,
+      reporterId: currentUserId,
+    );
   }
 
   @override
@@ -35,58 +42,40 @@ class _ChatReportViewState extends ConsumerState<ChatReportView> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = ref.watch(loginViewModelProvider).user?.id;
+    final params = ChatReportParam(
+      roomId: widget.roomId,
+      reportedUserId: widget.reportedUserId,
+      reporterId: ref.watch(loginViewModelProvider).user!.id,
+    );
 
-    if (currentUserId == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Row(
-            children: const [
-              Text('사용자 신고'),
-            ],
-          ),
-        ),
-        body: const Center(child: Text('로그인이 필요합니다.')),
-      );
-    }
+    final notifier = ref.read(chatReportViewModelProvider(params).notifier);
+    final state = ref.watch(chatReportViewModelProvider(params));
 
-    final chatReportViewModel = ref.watch(chatReportViewModelProvider(
-      ChatReportParam(
-        roomId: widget.roomId,
-        reportedUserId: widget.reportedUserId,
-        reporterId: currentUserId,
-      ),
-    ).notifier);
-
-    final chatReportState = ref.watch(chatReportViewModelProvider(
-      ChatReportParam(
-        roomId: widget.roomId,
-        reportedUserId: widget.reportedUserId,
-        reporterId: currentUserId,
-      ),
-    ));
-
-    ref.listen<ChatReportState>(chatReportViewModelProvider(
-      ChatReportParam(
-        roomId: widget.roomId,
-        reportedUserId: widget.reportedUserId,
-        reporterId: currentUserId,
-      ),
-    ), (previous, next) {
-
-      if (!mounted) {
-        print('[ChatReportView] ref.listen: Widget is not mounted. Returning early.');
-        return;
-      }
+    ref.listen<ChatReportState>(chatReportViewModelProvider(params), (prev, next) {
+      if (!mounted) return;
 
       if (next.status == ReportStatus.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('신고가 접수되었습니다.')),
-        );
-        Navigator.pop(context);
-      }
-      else if (next.status == ReportStatus.error && next.message != null) {
-        print('[ChatReportView] ref.listen: Status is ERROR. Message: ${next.message}');
+        showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          useRootNavigator: false,
+          builder: (_) => AlertDialog(
+            title: const Text('신고 완료'),
+            content: Text(next.message ?? '신고가 접수되었습니다.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('확인'),
+              ),
+            ],
+          ),
+        )
+            .then((confirmed) {
+          if (confirmed == true && mounted) {
+            Navigator.of(context).pop();
+          }
+        });
+      } else if (next.status == ReportStatus.error && next.message != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message!)),
         );
@@ -158,7 +147,7 @@ class _ChatReportViewState extends ConsumerState<ChatReportView> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: chatReportState.status == ReportStatus.submitting
+                onPressed: state.status == ReportStatus.submitting
                     ? null
                     : () async {
                         final reason = _reasonController.text.trim();
@@ -190,9 +179,9 @@ class _ChatReportViewState extends ConsumerState<ChatReportView> {
 
                         if (shouldSubmit != true) return;
 
-                        chatReportViewModel.submitReport(reason);
+                        notifier.submitReport(reason);
                       },
-                child: chatReportState.status == ReportStatus.submitting
+                child: state.status == ReportStatus.submitting
                     ? const SizedBox(
                         width: 20,
                         height: 20,
