@@ -1,7 +1,7 @@
 import 'package:cba_connect_application/core/color.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/carpool_search_view.dart';
-import 'package:cba_connect_application/presentation/mycarpool/mycarpool_view.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/setting_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/home_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/mycarpool/mycarpool_view.dart';
+import 'package:cba_connect_application/presentation/main/pages/setting/setting_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,8 +14,6 @@ class MainView extends ConsumerStatefulWidget {
 
 class _MainViewState extends ConsumerState<MainView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  /** 임의로 테스트하려고 주석처리 해놨습니다!*/
-  // final List<Widget> _views = [CarpoolSearchView(), SearchView(), ProfileView()];
   final List<Widget> _views = [CarpoolSearchView(), MyCarpoolView(), SettingView()];
 
   @override

@@ -1,8 +1,8 @@
 import 'package:cba_connect_application/core/lifecycle_manager.dart';
 import 'package:cba_connect_application/presentation/chat/chat_view_model.dart';
-import 'package:cba_connect_application/presentation/main/pages/home/registration_view_model.dart';
+import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 import 'package:cba_connect_application/repositories/chat_repository.dart';
-import 'package:cba_connect_application/repositories/carpool_repository.dart';
+import 'package:cba_connect_application/models/carpool_room.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/core/socket_manager.dart';
 import 'package:cba_connect_application/socket_event_handler/chat_event_handler.dart';
@@ -12,6 +12,9 @@ import 'package:cba_connect_application/presentation/login/login_view_model.dart
 import 'package:cba_connect_application/datasources/fcm_data_source.dart';
 import 'package:cba_connect_application/repositories/fcm_repository.dart';
 import 'package:cba_connect_application/firebaseService/fcm_service.dart';
+
+import 'package:cba_connect_application/datasources/chat_report_datasource.dart';
+import 'package:cba_connect_application/repositories/chat_report_repository.dart';
 
 final socketManagerProvider = Provider((ref) => SocketManager());
 
@@ -32,6 +35,9 @@ final chatViewModelProvider = StateNotifierProvider.family
       return ChatViewModel(roomId: roomId, repository: repository, carpoolRepository: carpoolRepository, ref: ref);
 });
 
+final chatRoomDetailProvider = StateProvider.family<CarpoolRoomDetail?, int>((ref, roomId) {
+  return null; // 초기값은 null
+});
 
 
 
@@ -59,4 +65,17 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
 final lifecycleManagerProvider = Provider.family.autoDispose<LifecycleManager, int>((ref, userId) {
   final repository = ref.read(fcmRepositoryProvider);
   return LifecycleManager(userId, repository);
+});
+
+
+// DataSource 프로바이더
+final chatreportDataSourceProvider = Provider<ChatreportDataSource>((ref) {
+  return ChatreportDataSourceImpl();
+});
+
+// Repository 프로바이더
+
+final chatreportRepositoryProvider = Provider<ChatreportRepository>((ref) {
+  final dataSource = ref.read(chatreportDataSourceProvider);
+  return ChatreportRepositoryImpl(dataSource);
 });

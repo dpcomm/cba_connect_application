@@ -50,8 +50,8 @@ flutter_native_splash:
   image: assets/images/carpool_service_icon.png
 
   # 하단 브랜딩 이미지 (RE＊CBA)
-  branding: assets/images/recba_branding_icon.png
-  branding_mode: bottom
+#  branding: assets/images/recba_branding_icon.png
+#  branding_mode: bottom
 
   android_12:
     icon_background_color: "#6A1B9A"
