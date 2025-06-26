@@ -232,7 +232,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
         ? '도착지 정보 없음'
         : (destinationRaw == "경기도 양주시 광적면 현석로 313-44" ? "수련회장" : destinationRaw);
 
-    final timeText = DateFormat('M월 d일, a h시 mm분', 'ko').format(roomDetail.room.departureTime);
+    final timeText = DateFormat('M/d(E) a h:mm', 'ko').format(roomDetail.room.departureTime);
 
     return SingleChildScrollView(
       child: 

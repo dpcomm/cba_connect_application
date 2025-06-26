@@ -217,7 +217,7 @@ class _CarpoolSearchViewState extends ConsumerState<CarpoolSearchView>
             itemBuilder: (context, i) {
               final room = rooms[i];
               final current = room.seatsTotal - room.seatsLeft;
-              final timeText = DateFormat('a h시 mm분', 'ko').format(room.departureTime);
+              final timeText = DateFormat('M/d(E) a h:mm', 'ko').format(room.departureTime);
 
               final regionValue = tabIndex == 0
                   ? room.origin

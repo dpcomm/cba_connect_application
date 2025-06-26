@@ -84,7 +84,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
     final targetAddress = widget.tabIndex == 0 ? '출발: ${room.origin}' : '도착: ${room.destination}';
     final driver = room.driver;
     final current = room.seatsTotal - room.seatsLeft;
-    final timeText = DateFormat('a h시 mm분', 'ko').format(room.departureTime);
+    final timeText = DateFormat('M/d(E) a h:mm', 'ko').format(room.departureTime);
 
     final isOwner = userId == room.driverId;
     final isFull = current >= room.seatsTotal;
@@ -162,7 +162,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
             const Divider(),
             _buildInfoRow(
               Image.asset('assets/images/request_icon.png', width: 24, height: 24),
-              '요청사항: ${room.note ?? ''}',
+              '메모: ${room.note ?? ''}',
             ),
 
 
