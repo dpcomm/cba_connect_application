@@ -164,7 +164,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
     
     if (currentUserId == null) {
       state = state.copyWith(status: SettingStatus.error, message: '사용자 정보를 찾을 수 없습니다.');
-      _showSnackBar(context, state.message!);
+      _showErrorDialog(context, state.message!);
       return;
     }
 
@@ -179,14 +179,14 @@ class SettingViewModel extends StateNotifier<SettingState> {
         _showSnackBar(context, state.message!);
       } on NetworkException catch (e) {
         state = state.copyWith(status: SettingStatus.error, message: '네트워크 오류: ${e.message}');
-        _showSnackBar(context, state.message!);
+        _showErrorDialog(context, state.message!);
       } on CustomException catch (e) { 
         state = state.copyWith(status: SettingStatus.error, message: e.message);
-        _showSnackBar(context, state.message!);
+        _showErrorDialog(context, state.message!);
       } catch (e) { 
         state = state.copyWith(status: SettingStatus.error, message: '이름 저장 중 알 수 없는 오류가 발생했습니다: ${e.toString()}');
         print('이름 저장 중 오류 발생: $e');
-        _showSnackBar(context, state.message!);
+        _showErrorDialog(context, state.message!);
       }
     }
 
@@ -198,7 +198,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
     
     if (currentUserId == null) {
       state = state.copyWith(status: SettingStatus.error, message: '사용자 정보를 찾을 수 없습니다.');
-      _showSnackBar(context, state.message!);
+      _showErrorDialog(context, state.message!);
       return;
     }
 
@@ -215,14 +215,14 @@ class SettingViewModel extends StateNotifier<SettingState> {
       _showSnackBar(context, state.message!);
     } on NetworkException catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: '네트워크 오류: ${e.message}');
-      _showSnackBar(context, state.message!);
+      _showErrorDialog(context, state.message!);
     } on CustomException catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: e.message);
-      _showSnackBar(context, state.message!);
+      _showErrorDialog(context, state.message!);
     } catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: '전화번호 저장 중 알 수 없는 오류가 발생했습니다: ${e.toString()}');
       print('전화번호 저장 중 오류 발생: $e');
-      _showSnackBar(context, state.message!);
+      _showErrorDialog(context, state.message!);
     }
   }
 
@@ -244,13 +244,13 @@ class SettingViewModel extends StateNotifier<SettingState> {
     } on CustomException catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: e.message);
       if (showSnackBar) {
-        _showSnackBar(context, state.message!);
+        _showErrorDialog(context, state.message!);
       }
     } catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: '차 정보 저장에 실패했습니다: ${e.toString()}');
       print('차 정보 저장 중 오류 발생: $e');
       if (showSnackBar) {
-        _showSnackBar(context, state.message!);
+        _showErrorDialog(context, state.message!);
       }
     }
   }
@@ -277,7 +277,7 @@ class SettingViewModel extends StateNotifier<SettingState> {
     if (shouldLogout != true) return;
 
     try {
-      _showSnackBar(context, '로그아웃 되었습니다.');
+      // _showSnackBar(context, '로그아웃 되었습니다.');
       await SecureStorage.delete(key: 'access-token');
       await SecureStorage.delete(key: 'refresh-token');
 
@@ -286,30 +286,107 @@ class SettingViewModel extends StateNotifier<SettingState> {
       Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
     } on CustomException catch (e) {
       state = state.copyWith(status: SettingStatus.error, message: e.message);
-      if (showSnackBar) _showSnackBar(context, state.message!);
+      if (showSnackBar) _showErrorDialog(context, state.message!);
     } catch (e) {
       state = state.copyWith(
         status: SettingStatus.error,
         message: '로그아웃 중 오류가 발생했습니다: ${e.toString()}',
       );
-      if (showSnackBar) _showSnackBar(context, state.message!);
+      if (showSnackBar) _showErrorDialog(context, state.message!);
     }
   }
 
+  Future<void> handleDeleteUser(BuildContext context, {bool showSnackBar = true}) async {
+    final shouldDeleteUser = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('계정 삭제'),
+        content: const Text('정말 계정을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('예, 삭제합니다'),
+          ),
+        ],
+      ),
+    );
 
-  // 스낵바 표시 헬퍼 함수
+    if (shouldDeleteUser != true) return;
+
+    try {
+      state = state.copyWith(status: SettingStatus.loading);
+
+      final loginViewModelNotifier = _ref.read(loginViewModelProvider.notifier);
+      final currentUserId = loginViewModelNotifier.state.user?.id;
+
+      if (currentUserId == null) {
+        state = state.copyWith(status: SettingStatus.error, message: '로그인된 사용자 정보를 찾을 수 없어 계정을 삭제할 수 없습니다.');
+        if (showSnackBar) _showErrorDialog(context, state.message!);
+        return;
+      }
+
+      await _userRepository.deleteUser(currentUserId);
+
+      await SecureStorage.delete(key: 'access-token');
+      await SecureStorage.delete(key: 'refresh-token');
+      await _prefs.remove('car_info_$currentUserId');
+
+      AppRoot.resetProviders();
+
+      Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+
+      state = state.copyWith(status: SettingStatus.success);
+
+    } on CustomException catch (e) {
+      state = state.copyWith(status: SettingStatus.error, message: e.message);
+      if (showSnackBar) _showErrorDialog(context, '계정 삭제 중 오류 발생: ${state.message!}');
+    } catch (e) {
+      state = state.copyWith(
+        status: SettingStatus.error,
+        message: '예상치 못한 오류로 계정 삭제에 실패했습니다: ${e.toString()}',
+      );
+      if (showSnackBar) _showErrorDialog(context, state.message!);
+    }
+  }
+
+  // 성공 시 스낵바 표시 헬퍼 함수
   void _showSnackBar(BuildContext context, String message) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      backgroundColor: secondaryColor,
-      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0), // <--- 이 부분
-      content: Text(
-        message,
-        style: const TextStyle(fontSize: 16, color: Colors.white), // <--- 이 부분
+      SnackBar(
+        backgroundColor: secondaryColor,
+        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 16, color: Colors.white),
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  // 에러 시 다이얼로그 표시 헬퍼 함수
+  void _showErrorDialog(BuildContext context, String message) {
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('오류'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

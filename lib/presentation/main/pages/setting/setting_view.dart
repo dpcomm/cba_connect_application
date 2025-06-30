@@ -256,7 +256,23 @@ class _SettingViewState extends ConsumerState<SettingView> {
                 child: const Text('로그아웃'),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+
+            // 계정삭제 버튼
+            Center(
+              child: TextButton(
+                onPressed: () => settingViewModel.handleDeleteUser(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                child: const Text('계정 삭제'),
+              ),
+            ),
           ],
         ),
       ),  
