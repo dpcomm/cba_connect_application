@@ -7,6 +7,7 @@ import 'package:cba_connect_application/core/secure_storage.dart';
 abstract class UserDataSource {
   Future<void> updateUserName(UpdateUserNamelDto dto);
   Future<void> updateUserPhone(UpdateUserPhoneDto dto);
+  Future<void> deleteUser(int userId);
 }
 
 class UserDataSourceImpl implements UserDataSource {
@@ -57,6 +58,32 @@ class UserDataSourceImpl implements UserDataSource {
 
     if (resp.statusCode != 200) {
       throw NetworkException('Failed to update phone: ${resp.data}');
+    }
+    
+    } on DioException catch (e) {
+      throw NetworkException('Network error: ${e.message}');
+    } catch (e) {
+      throw UnknownException('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteUser(int userId) async {
+    final String? accessToken = await SecureStorage.read(key: 'access-token');
+
+    if (accessToken == null) {
+      throw UnauthorizedApiKeyException('Access Token not found');
+    }
+
+    try {
+      final resp = await _dio.post(
+        '/api/user/delete',
+        data: {'id' : userId},
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'} ),
+      );
+
+    if (resp.statusCode != 200) {
+      throw NetworkException('Failed to delete user: ${resp.data}');
     }
     
     } on DioException catch (e) {

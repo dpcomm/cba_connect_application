@@ -208,7 +208,7 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
                       itemCount: filteredRooms.length,
                       itemBuilder: (context, i) {
                         final room = filteredRooms[i];
-                        final timeText = DateFormat('M월 d일, a h시 mm분', 'ko').format(room.departureTime);
+                        final timeText = DateFormat('M/d(E) a h:mm', 'ko').format(room.departureTime);
                         
                         // 주소 텍스트 대체 로직 추가
                         final displayOrigin = room.origin == RETREAT_FULL_ADDRESS ? RETREAT_DISPLAY_NAME : room.origin;

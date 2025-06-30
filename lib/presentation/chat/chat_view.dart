@@ -254,6 +254,22 @@ class _ChatViewState extends ConsumerState<ChatView> {
   void _showCarpoolInfo(BuildContext context, CarpoolRoomDetail? detail) {
     if (detail == null) return;
 
+    // 수련회장 주소
+    const retreatAddress = '경기도 양주시 광적면 현석로 313-44';
+    final isGoingRetreat = detail.room.destination.contains(retreatAddress);
+
+    final displayLocation = isGoingRetreat
+        ? detail.room.origin
+        : detail.room.destination;
+
+    final displayLocationDetail = isGoingRetreat
+        ? (detail.room.originDetailed.isNotEmpty
+            ? detail.room.originDetailed
+            : detail.room.origin)
+        : (detail.room.destinationDetailed.isNotEmpty
+            ? detail.room.destinationDetailed
+            : detail.room.destination);
+
     showDialog(
       context: context,
       builder: (context) {
@@ -272,7 +288,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                   const Icon(Icons.place, size: 20, color: secondaryColor),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('장소: ${detail.room.originDetailed}\n(${detail.room.origin})'),
+                    child: Text('장소: $displayLocationDetail\n($displayLocation)'),
                   ),
                 ],
               ),
@@ -281,7 +297,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                 children: [
                   const Icon(Icons.access_time, size: 20, color: secondaryColor),
                   const SizedBox(width: 8),
-                  Text('시간: ${DateFormat('yyyy-MM-dd, HH:mm').format(detail.room.departureTime)}'),
+                  Text('시간: ${DateFormat('M/d(E) a h:mm', 'ko').format(detail.room.departureTime)}'),
                 ],
               ),
               const SizedBox(height: 8),
