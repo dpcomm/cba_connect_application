@@ -87,6 +87,37 @@ class MyCarpoolDetailPageViewModel extends StateNotifier<MyCarpoolDetailState> {
       );
     }
   }
+
+  /// 카풀 출발 (운전자 입장)
+  Future<void> markCarpoolAsDeparted(int roomId) async {
+    state = state.copyWith(status: MyCarpoolDetailStatus.loading, message: '카풀 출발 처리 중...');
+    try {
+      await _repository.updateCarpoolStatus(roomId, CarpoolStatus.inTransit.toApiString());
+      await _repository.sendStartNotification(roomId);
+
+      final currentRoomDetail = state.roomDetail;
+      if (currentRoomDetail != null) {
+        final currentRoom = currentRoomDetail.room;
+        final updatedRoom = currentRoom.copyWith(status: CarpoolStatus.inTransit);
+        final updatedRoomDetail = CarpoolRoomDetail(room: updatedRoom, members: currentRoomDetail.members);
+
+        state = state.copyWith(
+          status: MyCarpoolDetailStatus.success,
+          message: '카풀 운행을 시작합니다! 안전 운행 하세요 :)',
+          roomDetail: updatedRoomDetail,
+        );
+      } else {
+        state = state.copyWith(
+          status: MyCarpoolDetailStatus.success,
+          message: '카풀 운행을 시작합니다! 안전 운행 하세요 :)',
+        );
+      }
+    } on CustomException catch (e) {
+      state = state.copyWith(status: MyCarpoolDetailStatus.error, message: e.message);
+    } catch (e) {
+      state = state.copyWith(status: MyCarpoolDetailStatus.error, message: '카풀 출발 처리에 실패했습니다: ${e.toString()}');
+    }
+  }
 }
 
 final myCarpoolDetailPageProvider = StateNotifierProvider<MyCarpoolDetailPageViewModel, MyCarpoolDetailState>(

@@ -1,91 +1,35 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cba_connect_application/models/carpool_room.dart';
-import 'package:cba_connect_application/repositories/carpool_repository.dart';
 import 'package:cba_connect_application/presentation/main/pages/home/registration/registration_view_model.dart';
 
-enum CarpoolMembersStatus { initial, loading, success, error }
+// AsyncNotifier 구현
+class CarpoolMembersNotifier extends AutoDisposeFamilyAsyncNotifier<List<CarpoolUserInfo>, int> {
 
-class CarpoolMembersState {
-  final CarpoolMembersStatus status;
-  final List<CarpoolUserInfo> members;
-  final String? message;
+  @override
+  Future<List<CarpoolUserInfo>> build(int roomId) async {
+    final carpoolRepository = ref.watch(carpoolRepositoryProvider);
+    final roomDetail = await carpoolRepository.fetchCarpoolDetails(roomId);
 
-  const CarpoolMembersState({
-    this.status = CarpoolMembersStatus.initial,
-    this.members = const [],
-    this.message,
-  });
+    final members = roomDetail.members.map((m) => CarpoolUserInfo(
+      userId: m.userId,
+      name: m.name,
+      phone: m.phone ?? '',
+    )).toList();
 
-  CarpoolMembersState copyWith({
-    CarpoolMembersStatus? status,
-    List<CarpoolUserInfo>? members,
-    String? message,
-  }) {
-    return CarpoolMembersState(
-      status: status ?? this.status,
-      members: members ?? this.members,
-      message: message ?? this.message,
-    );
+    return members;
+  }
+
+  // 필요한 경우 외부에서 데이터를 새로고침하는 메서드
+  Future<void> refreshMembers() async {
+    // state를 AsyncLoading으로 설정하여 로딩 상태를 알리고
+    // build 메서드를 다시 호출하여 데이터를 새로고침
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => build(arg)); // arg는 build 메서드의 roomId 값
   }
 }
 
-class CarpoolMembersViewModel extends StateNotifier<CarpoolMembersState> {
-  final int roomId;
-  final CarpoolRepository _carpoolRepository;
-  final Ref ref;
-
-  CarpoolMembersViewModel({
-    required this.roomId,
-    required CarpoolRepository carpoolRepository,
-    required this.ref,
-  })  : _carpoolRepository = carpoolRepository,
-        super(const CarpoolMembersState());
-
-  Future<void> loadMembers() async {
-    state = state.copyWith(status: CarpoolMembersStatus.loading);
-    try {
-      final roomDetail = await _carpoolRepository.fetchCarpoolDetails(roomId);
-
-      if (!mounted) {
-        // 만약 ViewModel이 dispose되었다면, 더 이상 상태를 업데이트하지 않고 함수 종료
-        print('[CarpoolMembersViewModel] loadMembers: ViewModel is not mounted. Skipping state update.');
-        return;
-      }
-
-      final members = <CarpoolUserInfo>[
-        ...roomDetail.members.map((m) => CarpoolUserInfo(
-              userId: m.userId,
-              name: m.name,
-              phone: m.phone ?? '',
-            )),
-      ];
-
-      state = CarpoolMembersState(
-        status: CarpoolMembersStatus.success,
-        members: members,
-      );
-    } catch (e) {
-
-      if (!mounted) {
-        print('[CarpoolMembersViewModel] loadMembers: ViewModel is not mounted. Skipping error state update.');
-        return;
-      }
-      
-      state = CarpoolMembersState(
-        status: CarpoolMembersStatus.error,
-        message: e.toString(),
-      );
-    }
-  }
-}
-
-// 프로바이더 선언 (roomId 별)
-final carpoolMembersProvider = StateNotifierProvider.family
-    .autoDispose<CarpoolMembersViewModel, CarpoolMembersState, int>((ref, roomId) {
-  final carpoolRepository = ref.watch(carpoolRepositoryProvider);
-  return CarpoolMembersViewModel(
-    roomId: roomId,
-    carpoolRepository: carpoolRepository,
-    ref: ref,
-  );
+// AsyncNotifierProvider 선언
+final carpoolMembersProvider = AsyncNotifierProvider.family
+    .autoDispose<CarpoolMembersNotifier, List<CarpoolUserInfo>, int>(() {
+  return CarpoolMembersNotifier();
 });

@@ -340,6 +340,7 @@ class _CarpoolEditViewState extends ConsumerState<CarpoolEditView> {
                       controller: _noteCtrl,
                       hint: '시간 엄수, 도착하면 전화주세요 등',
                       enabled: true, // 메모는 수정 가능
+                      maxLines: 3,
                   ),
                   const SizedBox(height: 30),
 
@@ -466,12 +467,14 @@ class _CarpoolEditViewState extends ConsumerState<CarpoolEditView> {
     bool readOnly = false,
     VoidCallback? onTap,
     bool enabled = true, // 기본값 true로 설정
+    int? maxLines,
   }) {
     return TextFormField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
       enabled: enabled,
+      maxLines: maxLines ?? 1,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: enabled ? Colors.black38 : Colors.black54), // 비활성화 시 힌트 색상 변경

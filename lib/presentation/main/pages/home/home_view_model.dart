@@ -31,9 +31,12 @@ class CarpoolSearchViewModel extends StateNotifier<CarpoolSearchState> {
     try {
       final list = await _repository.getAllCarpools();
       print(list);
+
+      final beforeDeapartedList = list.where((room) => room.status == CarpoolStatus.beforeDeparture).toList();
+
       state = CarpoolSearchState(
         status: CarpoolSearchStatus.success,
-        rooms: list,
+        rooms: beforeDeapartedList,
       );
     } on NetworkException catch (e) {
       state = CarpoolSearchState(

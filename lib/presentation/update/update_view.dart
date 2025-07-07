@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:cba_connect_application/core/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpdateView extends StatelessWidget {
   final String currentVersion;
@@ -69,16 +73,23 @@ class UpdateView extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 32),
-
-                // 업데이트 버튼
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: 마켓/스토어 링크 열기 로직
+                    onPressed: () async {
+                      final storeUrl = Platform.isIOS
+                          ? 'https://apps.apple.com/kr/app/cba-connect/id6747623245'
+                          : 'https://play.google.com/store/apps/details?id=com.cba.cba_connect_application&pcampaignid=web_share';
+
+                      final uri = Uri.parse(storeUrl);
+                      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('스토어를 열 수 없습니다.')),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
+                      backgroundColor: secondaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -91,6 +102,7 @@ class UpdateView extends StatelessWidget {
                     ),
                   ),
                 ),
+
               ],
             ),
           ),

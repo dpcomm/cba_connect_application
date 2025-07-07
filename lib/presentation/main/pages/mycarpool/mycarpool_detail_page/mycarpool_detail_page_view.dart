@@ -101,9 +101,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
     }
    }
 
-  Future<void> _cancelCarpoolRegistration() async {
-    print('카풀 삭제: roomId=${widget.id}');
-
+  Future<void> _deleteCarpool() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -141,10 +139,61 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
     }
   }
 
+  Future<void> _confirmDepart(int roomId) async {
+    final bool? shouldDepart = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('카풀 출발 확인'),
+        content: const Text('지금 출발하시겠습니까? \n탑승자들에게 출발 알림이 전송됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('예, 출발합니다'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDepart == true) {
+      await ref.read(myCarpoolDetailPageProvider.notifier).markCarpoolAsDeparted(roomId);
+
+      final state = ref.read(myCarpoolDetailPageProvider);
+      if (mounted) { // 위젯이 마운트된 상태인지 확인 (비동기 작업 후 안전성)
+        if (state.status == MyCarpoolDetailStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: secondaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+              content: Text(
+                state.message ?? '카풀 출발 처리되었습니다',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            // SnackBar(content: Text(state.message ?? '카풀 출발이 성공적으로 처리되었습니다.')),
+          );          
+        } else if (state.status == MyCarpoolDetailStatus.loading) { 
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message ?? '카풀 출발 처리 중...')),
+          );
+        } else if (state.status == MyCarpoolDetailStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message ?? '카풀 출발 처리에 실패했습니다.')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(myCarpoolDetailPageProvider);
-
+    final bool isCarpoolDetailSuccess = state.status == MyCarpoolDetailStatus.success && state.roomDetail != null;
+    final bool isBeforeDeparture = isCarpoolDetailSuccess && state.roomDetail!.room.status == CarpoolStatus.beforeDeparture;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -165,42 +214,45 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
         actions: [
           if (state.status == MyCarpoolDetailStatus.success && _isDriver)
             TextButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CarpoolEditView(
-                      carpoolId: state.roomDetail!.room.id,
-                      destinationType: state.roomDetail!.room.destination == "경기도 양주시 광적면 현석로 313-44" ? 'retreat' : 'home',
+              onPressed: isBeforeDeparture
+                  ? () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CarpoolEditView(
+                            carpoolId: state.roomDetail!.room.id,
+                            destinationType: state.roomDetail!.room.destination == "경기도 양주시 광적면 현석로 313-44" ? 'retreat' : 'home',
+                          ),
+                        ),
+                      );
+
+                      if (result == true) {
+                        await ref.read(myCarpoolDetailPageProvider.notifier).fetchCarpoolDetail(widget.id);
+                        // setState(() {}); // 필요 시 리렌더링
+                      }
+                    }
+                  : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: !isBeforeDeparture ? Colors.grey : secondarySub1Color,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                  minimumSize: Size(0, 0), // 최소 크기 제거
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: !isBeforeDeparture ? Colors.grey.shade400 : secondarySub1Color,
+                      width: 0.7,
                     ),
                   ),
-                );
-
-                if (result == true) {
-                  await ref.read(myCarpoolDetailPageProvider.notifier).fetchCarpoolDetail(widget.id);
-                  // setState(() {}); // 필요 시 리렌더링
-                }
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: secondaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                minimumSize: Size(0, 0), // 최소 크기 제거
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap, // 터치 영역 크기를 내용물에 맞게 줄임
-                shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
                 ),
-                
-                
-              ),
-              child: const Text(
-                '수정',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                child: Text(
+                  '수정',
+                  style: TextStyle(
+                    color: !isBeforeDeparture ? Colors.grey[400] : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
-            ),
         ],
       ),
       body: state.status == MyCarpoolDetailStatus.loading
@@ -208,14 +260,14 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
           : state.status == MyCarpoolDetailStatus.error
               ? Center(child: Text(state.message ?? '에러가 발생했습니다.'))
               : (state.status == MyCarpoolDetailStatus.left || state.status == MyCarpoolDetailStatus.deleted)
-                  ? Center(child: Text(state.message ?? '작업이 완료되었습니다.')) // 작업 완료 후 메시지 표시
+                  ? Center(child: Text(state.message ?? '작업이 완료되었습니다.'))
                   : (state.status == MyCarpoolDetailStatus.success && state.roomDetail != null)
-                      ? _buildDetailUI(state.roomDetail!)
-                      : const Center(child: Text('카풀 정보를 불러올 수 없습니다.')), // 초기 상태 또는 데이터 없음
+                      ? _buildDetailUI(state.roomDetail!, isBeforeDeparture)
+                      : const Center(child: Text('카풀 정보를 불러올 수 없습니다.')),
     );
   }
 
-  Widget _buildDetailUI(CarpoolRoomDetail roomDetail) {
+  Widget _buildDetailUI(CarpoolRoomDetail roomDetail, bool isBeforeDeparture) {
     final int driverId = roomDetail.room.driver.id;
     final List<CarpoolUserInfo> passengers = roomDetail.members.where((member) => member.userId != driverId).toList();
 
@@ -223,14 +275,25 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
     final mapLng = roomDetail.room.originLng;
 
     final originRaw = roomDetail.room.origin;
+    final originDetailed = roomDetail.room.originDetailed;
     final originText = originRaw.isEmpty
-        ? '출발지 정보 없음'
-        : (originRaw == "경기도 양주시 광적면 현석로 313-44" ? "수련회장" : originRaw);
+            ? '출발지 정보 없음'
+            : (originRaw == "경기도 양주시 광적면 현석로 313-44"
+                ? "수련회장"
+                : (originDetailed.isNotEmpty && originDetailed != originRaw
+                    ? '$originDetailed\n($originRaw)'
+                    : originRaw));
+
 
     final destinationRaw = roomDetail.room.destination;
+    final destinationDetailed = roomDetail.room.destinationDetailed;
     final destinationText = destinationRaw.isEmpty
         ? '도착지 정보 없음'
-        : (destinationRaw == "경기도 양주시 광적면 현석로 313-44" ? "수련회장" : destinationRaw);
+        : (destinationRaw == "경기도 양주시 광적면 현석로 313-44"
+            ? "수련회장"
+            : (destinationDetailed.isNotEmpty && destinationDetailed != destinationRaw 
+                ? '$destinationDetailed\n($destinationRaw)' 
+                : destinationRaw));
 
     final timeText = DateFormat('M/d(E) a h:mm', 'ko').format(roomDetail.room.departureTime);
 
@@ -336,14 +399,9 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        roomDetail.room.note.isEmpty ? "메모가 없습니다" : roomDetail.room.note,
-                        style: const TextStyle(fontSize: 14, color: text900Color),
-                      ),
-                    ],
+                  child: Text(
+                    roomDetail.room.note.isEmpty ? "메모가 없습니다" : roomDetail.room.note,
+                    style: const TextStyle(fontSize: 14, color: text900Color),
                   ),
                 ),
               ],
@@ -352,7 +410,7 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
             const Divider(thickness: 1, height: 1),
             H_Space20,
 
-            _buildBottomButtons(roomDetail),
+            _buildBottomButtons(roomDetail, isBeforeDeparture),
           ],
         ),
       ),
@@ -373,9 +431,16 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(label, style: const TextStyle(fontSize: 14, color: text900Color)),
-                Text(value, style: const TextStyle(fontSize: 14)),
+                Expanded (
+                  child: Text(
+                    value,
+                    style: const TextStyle(fontSize: 14),
+                    textAlign: TextAlign.right,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -496,65 +561,124 @@ class _MyCarpoolDetailPageViewState extends ConsumerState<MyCarpoolDetailPageVie
     );
   }
 
-  Widget _buildBottomButtons(CarpoolRoomDetail room) {
+  Widget _buildBottomButtons(CarpoolRoomDetail room, bool isBeforeDeparture) {
+    final bool isDepartureDay = DateTime.now().year == room.room.departureTime.year &&
+                              DateTime.now().month == room.room.departureTime.month &&
+                              DateTime.now().day == room.room.departureTime.day;
+    
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0), // 하단 마진 추가
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 140,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 40),
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  side: BorderSide(color: Colors.grey.shade400),
-                ),
-                elevation: 0,
-              ),
-              onPressed: () {
-                if (_isDriver) {
-                  _cancelCarpoolRegistration();
-                } else {
-                  _leaveCarpool();
-                }
-              },
-              child: Text(
-                _isDriver ? '카풀 삭제하기' : '카풀 나가기',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 140,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 40),
-                backgroundColor: secondarySub1Color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 2,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatView(
-                      roomId: room.room.id,
+          if (_isDriver && room.room.status == CarpoolStatus.beforeDeparture)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: SizedBox(
+                width: 292,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                    backgroundColor: isDepartureDay || room.room.status != CarpoolStatus.beforeDeparture ? secondarySub1Color : Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: BorderSide(
+                        color: isDepartureDay ? secondarySub1Color : Colors.grey.shade400, 
+                        width: isDepartureDay ? 0 : 1,
+                      ),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    if (isDepartureDay && room.room.status == CarpoolStatus.beforeDeparture) {
+                      _confirmDepart(room.room.id);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: secondaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+                          content: Text(
+                            '출발은 카풀 당일날 가능합니다.',
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    '출발하기',
+                    style: TextStyle(
+                      color: isDepartureDay && isBeforeDeparture ? Colors.white : Colors.grey.shade500,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, 
                     ),
                   ),
-                );
-              },
-              child: const Text(
-                '메시지',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 140,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: isBeforeDeparture
+                      ? () {
+                          if (_isDriver) {
+                            _deleteCarpool(); 
+                          } else {
+                            _leaveCarpool(); 
+                          }
+                        }
+                      : null,
+                  child: Text(
+                    _isDriver ? '카풀 삭제하기' : '카풀 나가기',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              SizedBox(
+                width: 140,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                    backgroundColor: secondarySub1Color,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 2,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatView(
+                          roomId: room.room.id,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    '메시지',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -18,20 +18,18 @@ class DateTimeView extends StatelessWidget {
     final bool isHome = destination == 'home';
 
     OutlineInputBorder outline = OutlineInputBorder(
-      borderSide: isHome ? BorderSide.none : BorderSide(color: Colors.grey.shade400),
+      borderSide: BorderSide(color: Colors.grey.shade400),
       borderRadius: BorderRadius.circular(14),
     );
 
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: isHome ? Colors.white : Colors.grey),
+      hintStyle: TextStyle(color: Colors.grey),
       filled: true,
-      fillColor: isHome ? Colors.grey.shade400 : Colors.white,
+      fillColor: Colors.white,
       border: outline,
       enabledBorder: outline,
-      focusedBorder: isHome
-          ? outline
-          : OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
         borderSide: const BorderSide(color: Color(0xFF7F19FB), width: 1.8),
         borderRadius: BorderRadius.circular(14),
       ),
@@ -66,19 +64,13 @@ class DateTimeView extends StatelessWidget {
           children: [
             // 날짜 영역
             Expanded(
-              child: isHome
-                  ? AbsorbPointer(
-                child: TextFormField(
-                  controller: dateController,
-                  decoration: getDecoration('날짜 입력 / 캘린더 연동'),
-                  style: const TextStyle(color: Colors.white),
-                ),
-              )
-                  : GestureDetector(
+              child: GestureDetector(
                 onTap: () async {
+                  // 이미 입력된 텍스트가 있으면 파싱, 없으면 현재 시각
+                  final initial = DateTime.tryParse(dateController.text) ?? DateTime.now();
                   DateTime? picked = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now(),
+                    initialDate: initial,
                     firstDate: DateTime(2000),
                     lastDate: DateTime(2100),
                   );
@@ -91,6 +83,7 @@ class DateTimeView extends StatelessWidget {
                   child: TextFormField(
                     controller: dateController,
                     decoration: getDecoration('날짜 입력 / 캘린더 연동'),
+                    validator: (v) => (v == null || v.isEmpty) ? '날짜를 선택하세요' : null,
                   ),
                 ),
               ),
@@ -107,8 +100,8 @@ class DateTimeView extends StatelessWidget {
                       controller: hourController,
                       keyboardType: TextInputType.number,
                       decoration: getDecoration('00'),
-                      readOnly: isHome,
-                      style: TextStyle(color: isHome ? Colors.white : null),
+                      readOnly: false,
+                      style: TextStyle(color: null),
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -126,8 +119,8 @@ class DateTimeView extends StatelessWidget {
                       controller: minuteController,
                       keyboardType: TextInputType.number,
                       decoration: getDecoration('00'),
-                      readOnly: isHome,
-                      style: TextStyle(color: isHome ? Colors.white : null),
+                      readOnly: false,
+                      style: TextStyle(color:  null),
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -142,6 +135,14 @@ class DateTimeView extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '※ 시간은 24시 기준으로 입력해주세요.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         ),
       ],
     );

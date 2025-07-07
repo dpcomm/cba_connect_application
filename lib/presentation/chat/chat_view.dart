@@ -133,23 +133,23 @@ class _ChatViewState extends ConsumerState<ChatView> {
           title: const Center(child: Text('카풀 참여자')),
           content: Consumer(
             builder: (context, ref, _) {
-              final state = ref.watch(carpoolMembersProvider(roomId));
 
-              switch (state.status) {
-                case CarpoolMembersStatus.loading:
-                  return const Center(child: CircularProgressIndicator());
-                case CarpoolMembersStatus.error:
-                  return Text(state.message ?? '멤버 정보를 불러올 수 없습니다.');
-                case CarpoolMembersStatus.success:
+              final membersAsyncValue = ref.watch(carpoolMembersProvider(roomId));
 
-                  final List<CarpoolUserInfo> sortedMembers = List.from(state.members);
+              return membersAsyncValue.when(
+                data: (members) {
+                  final List<CarpoolUserInfo> sortedMembers = List.from(members);
                   final int driverIndex = sortedMembers.indexWhere((member) => member.userId == driverId);
 
                   if (driverIndex != -1) {
                     final CarpoolUserInfo driver = sortedMembers.removeAt(driverIndex);
-                    sortedMembers.insert(0, driver);
+                    sortedMembers.insert(0, driver); // 운전자를 맨 위로
                   }
-                  
+
+                  if (sortedMembers.isEmpty) {
+                    return const Center(child: Text('참여 멤버가 없습니다.'));
+                  }
+
                   return SizedBox(
                     width: double.maxFinite,
                     child: ListView.builder(
@@ -168,63 +168,67 @@ class _ChatViewState extends ConsumerState<ChatView> {
                             isDriver ? Icons.directions_car : Icons.person,
                           ),
                           title: Text(member.name + (isMe ? '(나)' : '')),
-                          // subtitle: Text(member.phone),
                           trailing: isMe
-                            ? null
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  TextButton(
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4),
+                              ? null
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        backgroundColor: secondarySub2Color.withOpacity(0.1),
                                       ),
-                                      backgroundColor: secondarySub2Color.withOpacity(0.1),
-                                    ),
-                                    onPressed: member.phone.isNotEmpty
-                                        ? () => _makePhoneCall(member.phone)
-                                        : null,
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.call, size: 20),
-                                        SizedBox(width: 2),
-                                        Text('통화'),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  TextButton(
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4),
+                                      onPressed: member.phone.isNotEmpty
+                                          ? () => _makePhoneCall(member.phone)
+                                          : null,
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.call, size: 20),
+                                          SizedBox(width: 2),
+                                          Text('통화'),
+                                        ],
                                       ),
-                                      backgroundColor: Colors.red.withOpacity(0.07),
-                                      foregroundColor: Colors.red,
                                     ),
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _goToReportPage(context, roomId, member.userId, member.name);
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.report, size: 20),
-                                        SizedBox(width: 2),
-                                        Text('신고'),
-                                      ],
+                                    SizedBox(width: 8),
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        backgroundColor: Colors.red.withOpacity(0.07),
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _goToReportPage(context, roomId, member.userId, member.name);
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.report, size: 20),
+                                          SizedBox(width: 2),
+                                          Text('신고'),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
                         );
                       },
                     ),
                   );
-                case CarpoolMembersStatus.initial:
-                default:
-                  return const SizedBox.shrink();
-              }
+                },
+                loading: () {
+                  return const Center(child: CircularProgressIndicator());
+                },
+                error: (error, stackTrace) {
+                  print('Error loading members in popup: $error');
+                  return Center(child: Text('멤버 정보를 불러올 수 없습니다.\n오류: ${error.toString().split(':')[0]}', textAlign: TextAlign.center));
+                },
+              );
             },
           ),
           actions: [
@@ -329,8 +333,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
   @override
   Widget build(BuildContext context) {
     final loginState = ref.watch(loginViewModelProvider);
-    final membersState = ref.watch(carpoolMembersProvider(widget.roomId));
-    final membersViewModel = ref.read(carpoolMembersProvider(widget.roomId).notifier);
     final currentUserId = loginState.user?.id;
 
     if (currentUserId == null) {
@@ -346,6 +348,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
     // 현재 인원
     int currentMembers = (carpoolDetail?.room.seatsTotal ?? 0) - (carpoolDetail?.room.seatsLeft ?? 0);
     int maxMembers = carpoolDetail?.room.seatsTotal ?? 0;
+
+    final bool isArrived = carpoolDetail?.room.status == CarpoolStatus.arrived ?? false;
 
     final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
@@ -378,7 +382,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                   ),
                 InkWell(
                   onTap: () {
-                    ref.read(carpoolMembersProvider(widget.roomId).notifier).loadMembers();
+                    // ref.read(carpoolMembersProvider(widget.roomId).notifier).loadMembers();
                     _showMembersPopup(context, widget.roomId, currentUserId);
                   },
                   child: const Icon(Icons.people, color: secondaryColor),
@@ -466,7 +470,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                     },
                   ),
                 ),
-                _buildInputField(chatViewModel),
+                _buildInputField(chatViewModel, isArrived),
               ],
             ),
             if (_showScrollToBottomButton)
@@ -670,17 +674,19 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
   }
 
-  Widget _buildInputField(ChatViewModel chatViewModel) {
+  Widget _buildInputField(ChatViewModel chatViewModel, bool isArrived) {
+    final String hintText = isArrived ? '카풀이 종료되어 메시지를 보낼 수 없습니다.' : '메시지를 입력하세요.';
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 40),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isArrived ? Colors.grey[200] : Colors.white,
           borderRadius: BorderRadius.circular(32),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: isArrived ? Colors.transparent : Colors.black12,
               blurRadius: 8,
               offset: Offset(0, 4),
             ),
@@ -693,24 +699,32 @@ class _ChatViewState extends ConsumerState<ChatView> {
                 controller: _textController,
                 minLines: 1,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: '메시지를 입력하세요.',
+                readOnly: isArrived,
+                enabled: !isArrived,
+                decoration: InputDecoration(
+                  hintText: hintText,
                   border: InputBorder.none,
+                  hintStyle: TextStyle(color: isArrived ? Colors.grey : null),
                 ),
                 style: const TextStyle(fontSize: 16),
               ),
             ),
             GestureDetector(
-              onTap: () {
-                final text = _textController.text.trim();
-                if (text.isEmpty) return;
-                chatViewModel.sendMessage(text);
-                _textController.clear();
-                _scrollToBottom();
-              },
-              child: const Padding(
+              onTap: isArrived
+                ? null
+                : () {
+                    final text = _textController.text.trim();
+                    if (text.isEmpty) return;
+                    chatViewModel.sendMessage(text);
+                    _textController.clear();
+                    _scrollToBottom();
+                  },
+              child: Padding(
                 padding: EdgeInsets.all(5),
-                child: Icon(Icons.send, color: secondaryColor, size: 26),
+                child: Icon(
+                  Icons.send, 
+                  color: isArrived? Colors.grey : secondaryColor,
+                  size: 26),
               ),
             ),
           ],

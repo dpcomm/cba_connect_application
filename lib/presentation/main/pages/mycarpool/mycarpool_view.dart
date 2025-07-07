@@ -90,10 +90,10 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
           filteredRooms = allMyRooms;
           break;
         case 1: // 진행중
-          filteredRooms = allMyRooms.where((room) => !room.isArrived).toList();
+          filteredRooms = allMyRooms.where((room) => room.status != CarpoolStatus.arrived).toList();
           break;
         case 2: // 완료
-          filteredRooms = allMyRooms.where((room) => room.isArrived).toList();
+          filteredRooms = allMyRooms.where((room) => room.status == CarpoolStatus.arrived).toList();
           break;
       }
     }
@@ -217,9 +217,9 @@ class _MyCarpoolViewState extends ConsumerState<MyCarpoolView>
                         final bool isOriginRetreat = room.origin == RETREAT_FULL_ADDRESS;
                         final bool isDestinationRetreat = room.destination == RETREAT_FULL_ADDRESS;
 
-                        final statusText = room.isArrived == true ? '완료' : '진행중';
-                        final statusColor = room.isArrived == true ? text700Color : secondaryColor;
-                        final statusBackgroundColor = room.isArrived == true ? text500Color! :secondaryColor.withOpacity(0.1);
+                        final statusText = room.status == CarpoolStatus.arrived ? '완료' : '진행중';
+                        final statusColor = room.status == CarpoolStatus.arrived ? text700Color : secondaryColor;
+                        final statusBackgroundColor = room.status == CarpoolStatus.arrived ? text500Color! :secondaryColor.withOpacity(0.1);
 
                         return GestureDetector(
                           onTap: () => Navigator.push(
