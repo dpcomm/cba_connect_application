@@ -88,6 +88,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
 
     final isOwner = userId == room.driverId;
     final isFull = current >= room.seatsTotal;
+    final isDeparted = DateTime.now().isAfter(room.departureTime);
 
     final isAppliedByData = state.members.any((m) => m.userId == userId);
     final applied = isAppliedByData || _isAppliedLocal;
@@ -173,7 +174,7 @@ class _CarpoolDetailPageState extends ConsumerState<CarpoolDetailPageView> {
                 Expanded(
                   child: ButtonView(
                     isApplied: applied,
-                    onPressed: canJoin
+                    onPressed: canJoin && !isDeparted
                         ? () {
                             setState(() {
                               _isAppliedLocal = true;

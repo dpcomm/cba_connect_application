@@ -13,6 +13,9 @@ abstract class CarpoolRepository {
   Future<void> joinCarpool({ required int userId, required int roomId });
   Future<void> leaveCarpool({ required int userId, required int roomId });
   Future<void> deleteCarpool(int roomId);
+  Future<void> sendStartNotification(int roomId);
+  Future<void> updateCarpoolStatus(int roomId, String newStatus);
+
 }
 
 class CarpoolRepositoryImpl implements CarpoolRepository {
@@ -62,5 +65,15 @@ class CarpoolRepositoryImpl implements CarpoolRepository {
   @override
   Future<void> deleteCarpool(int roomId) {
     return _ds.deleteCarpool(roomId);
+  }
+
+  @override
+  Future<void> sendStartNotification(int roomId) {
+    return _ds.sendStartNotification(roomId);
+  }
+
+  @override
+  Future<void> updateCarpoolStatus(int roomId, String newStatus) {
+    return _ds.updateCarpoolStatus(roomId, newStatus);
   }
 }
