@@ -15,6 +15,8 @@ abstract class CarpoolDataSource {
   Future<void> joinCarpool(int userId, int roomId);
   Future<void> leaveCarpool(int userId, int roomId);
   Future<void> deleteCarpool(int roomId);
+  Future<void> sendStartNotification(int roomId);
+  Future<void> updateCarpoolStatus(int roomId, String newStatus);
 }
 
 class CarpoolDataSourceImpl implements CarpoolDataSource {
@@ -41,7 +43,7 @@ class CarpoolDataSourceImpl implements CarpoolDataSource {
   Future<CarpoolRoom> edit(UpdateCarpoolInfoDto dto) async {
     try {
       final resp = await _dio.post(
-        '/api/carpool/edit/${dto.carpoolId}', // 카풀 ID를 URL에 포함
+        '/api/carpool/edit/${dto.carpoolId}',
         data: dto.toJson(),
       );
       final payload = resp.data as Map<String, dynamic>;
@@ -105,8 +107,6 @@ class CarpoolDataSourceImpl implements CarpoolDataSource {
   Future<List<CarpoolRoom>> fetchMyCarpools(int userId) async {
     try {
       final resp = await _dio.get('/api/carpool/my/$userId');
-      // print('Response data: ${resp.data}');
-
       final data = resp.data as Map<String, dynamic>;
       final roomsData = data['rooms'] ?? data['room'] ?? [];
       final rooms = (roomsData as List)
@@ -158,6 +158,36 @@ class CarpoolDataSourceImpl implements CarpoolDataSource {
       );
     } on DioError catch (e) {
       throw NetworkException('카풀 방 삭제 실패: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> updateCarpoolStatus(int roomId, String newStatus) async {
+    try {
+      await _dio.post(
+        '/api/carpool/status',
+        data: {
+          'roomId': roomId,
+          'newStatus': newStatus
+        },
+      );
+    } on DioException catch (e) {
+      print('카풀 상태 업데이트 실패: ${e.message}');
+      throw NetworkException('카풀 상태 업데이트 실패');
+    } catch (e) {
+      print('예상치 못한 오류 발생: $e');
+      throw NetworkException('알 수 없는 오류 발생');
+    }
+  }
+
+  @override
+  Future<void> sendStartNotification(int roomId) async {
+    try {
+      await _dio.post(
+        '/api/carpool/start/$roomId',
+      );
+    } on DioError catch (e) {
+      throw NetworkException('카풀 방 출발 알림 전송 실패: ${e.message}');
     }
   }
 }
