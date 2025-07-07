@@ -343,7 +343,8 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                   const SizedBox(height: 6),
                   _buildInputField(
                       controller: _noteCtrl,
-                      hint: '시간 엄수, 도착하면 전화주세요 등'
+                      hint: '시간 엄수, 도착하면 전화주세요 등',
+                      maxLines: 3,
                   ),
                   const SizedBox(height: 30),
 
@@ -477,11 +478,13 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
     String? hint,
     bool readOnly = false,
     VoidCallback? onTap,
+    int? maxLines,
   }) {
     return TextFormField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
+      maxLines: maxLines ?? 1,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.black38),
