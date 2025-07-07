@@ -1,3 +1,4 @@
+import 'package:cba_connect_application/core/truncateString.dart';
 import 'package:flutter/material.dart';
 import 'package:characters/characters.dart';
 import 'package:cba_connect_application/presentation/widgets/close_badge.dart';
@@ -22,12 +23,6 @@ class CardDetailView extends StatelessWidget {
     required this.location,
   });
 
-  String _truncateCharacters(String s, int maxChars) {
-    final chars = s.characters;
-    if (chars.length <= maxChars) return s;
-    return chars.take(maxChars).toString() + '…';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isFull = currentPeople >= totalPeople;
@@ -50,14 +45,14 @@ class CardDetailView extends StatelessWidget {
                 const Text('📍', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 4),
                 Text(
-                  _truncateCharacters(region, 7),
+                  region.truncate(7),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(width: 8),
                 Text('👥 $currentPeople/$totalPeople', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 8),
                 Text(
-                    "🚘${_truncateCharacters(carInfo, 5)}",
+                    "🚘${carInfo.truncate(5)}",
                     style: TextStyle(fontSize: 14)
                 ),
                 if (isFull) ...[
@@ -91,7 +86,7 @@ class CardDetailView extends StatelessWidget {
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
-                    _truncateCharacters(location, 10),
+                    location.truncate(10),
                     style: const TextStyle(fontSize: 13, color: Colors.black87),
                   ),
                 ),

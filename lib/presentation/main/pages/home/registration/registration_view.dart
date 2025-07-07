@@ -357,59 +357,38 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                           final settingViewModel = ref.read(settingViewModelProvider.notifier);
                           await settingViewModel.saveCarInfo(_carInfoCtrl.text, context, showSnackBar: false);
 
-                          if (!_formKey.currentState!.validate()) return;
-                          String message;
+                          final hour   = int.tryParse(_hourController.text) ?? 0;
+                          final minute = int.tryParse(_minuteController.text) ?? 0;
+                          final date = DateFormat('yyyy-MM-dd').parse(_dateController.text);
+
+                          final departureTime = DateTime.utc(
+                            date.year, date.month, date.day,
+                            hour, minute,
+                          );
+
+                          String origin, detailedOrigin, destination;
+                          double originLat, originLng, destLat, destLng;
 
                           const String RETREAT_ADDRESS = '경기도 양주시 광적면 현석로 313-44';
                           const double RETREAT_LAT = 37.833038818526134;
                           const double RETREAT_LNG = 126.94192401531457;
 
-                          /** 만날 시간은 Datetime으로 지정해야 함.  */
-                          String origin;
-                          String detailedOrigin;
-                          String destination;
-                          double originLat, originLng;
-                          double destinationLat, destinationLng;
-
-                          final hour   = int.tryParse(_hourController.text) ?? 0;
-                          final minute = int.tryParse(_minuteController.text) ?? 0;
-
-                          /** 집으로 갈 땐 날짜, 시간 고정,*/
-                          /** 해당 내용은 통일된 정적 소스가 있으면 좋을 것 같음.(예를 들어 수련회 날짜 및 json데이터 참조해서...,*/
-                          final departureTime = widget.destination == 'home'
-                              ? DateTime.utc(2025, 7, 13, 13, 00)
-                              : () {
-                            final date = DateFormat('yyyy-MM-dd').parse(_dateController.text);
-                            return DateTime.utc(
-                              date.year,
-                              date.month,
-                              date.day,
-                              hour,
-                              minute,
-                            );
-                          }();
-
-                          // 집으로 가는 경우는 origin이 유저설정, originDetailed O, detailedOrigin X
                           if (widget.destination == 'retreat') {
                             origin = _addressCtrl.text;
                             detailedOrigin = _detailAddressCtrl.text;
                             originLat = _lat!;
                             originLng = _lng!;
-
                             destination = RETREAT_ADDRESS;
-                            destinationLat = RETREAT_LAT;
-                            destinationLng = RETREAT_LNG;
-                          }
-                          // 수련회장에 가는 경우에는 origin이 수련회장, originDetailed O, DetailedDestination X
-                          else {
+                            destLat = RETREAT_LAT;
+                            destLng = RETREAT_LNG;
+                          } else {
                             origin = RETREAT_ADDRESS;
-                            detailedOrigin = "";
+                            detailedOrigin = '';
                             originLat = RETREAT_LAT;
                             originLng = RETREAT_LNG;
-
                             destination = _addressCtrl.text;
-                            destinationLat = _lat!;
-                            destinationLng = _lng!;
+                            destLat = _lat!;
+                            destLng = _lng!;
                           }
 
                           final dto = CreateCarpoolDto(
@@ -423,27 +402,25 @@ class _RegistrationViewState extends ConsumerState<RegistrationView> {
                             note: _noteCtrl.text,
                             originLat: originLat,
                             originLng: originLng,
-                            destLat: destinationLat,
-                            destLng: destinationLng,
+                            destLat: destLat,
+                            destLng: destLng,
                           );
 
                           await ref.read(registrationViewModelProvider.notifier).createCarpool(dto);
                           final state = ref.read(registrationViewModelProvider);
+                          final message = state.status == RegistrationStatus.success
+                              ? '카풀 등록이 완료되었습니다.'
+                              : '카풀 등록에 실패하였습니다.';
+
                           if (state.status == RegistrationStatus.success) {
-                            message = '카풀 등록이 완료되었습니다.';
                             Navigator.pop(context);
-                          } else {
-                            message = '카풀 등록에 실패하였습니다.';
                           }
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               backgroundColor: const Color(0xFF7F19FB),
                               padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-                              content: Text(
-                                message,
-                                style: const TextStyle(fontSize: 16),
-                              ),
+                              content: Text(message, style: const TextStyle(fontSize: 16)),
                             ),
                           );
                         }
